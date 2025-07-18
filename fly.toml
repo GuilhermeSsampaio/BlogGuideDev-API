@@ -1,8 +1,8 @@
-app = "bloguide-api"
+app = "blogguidedev-api"
 primary_region = "gru"
 
 [build]
-dockerfile = "Dockerfile
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8000"
@@ -14,20 +14,21 @@ dockerfile = "Dockerfile
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
 
 [[http_service.checks]]
-  interval = "10s"
-  timeout = "2s"
-  grace_period = "5s"
+  interval = "15s"
+  timeout = "5s"
+  grace_period = "10s"
   method = "GET"
   path = "/health"
+  headers = { "User-Agent" = "fly-health-check" }
 
 [machine]
-  memory = "256mb"
+  memory = "512mb"  # Aumentado para evitar OOM
   cpu_kind = "shared"
   cpus = 1
 
-[[statics]]
-  guest_path = "/app/static"
-  url_prefix = "/static/"
+# Configuração para reiniciar em caso de falha
+[restart]
+  policy = "on-failure"
+  max_restarts = 3
