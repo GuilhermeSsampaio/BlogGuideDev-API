@@ -28,7 +28,3 @@ primary_region = "gru"
   cpu_kind = "shared"
   cpus = 1
 
-# Configuração para reiniciar em caso de falha
-[restart]
-  policy = "on-failure"
-  max_restarts = 3
