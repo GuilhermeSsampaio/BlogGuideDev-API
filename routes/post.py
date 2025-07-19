@@ -1,7 +1,9 @@
+from requests import get, session
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from database import get_session
 from models.post import Post, PostCreate, PostResponse
+from models.user import User
 from typing import List
 from datetime import datetime
 import json
@@ -131,3 +133,32 @@ def delete_post(post_id: int, session: Session = Depends(get_session)):
         print(f"Erro ao deletar post: {str(e)}")
         session.rollback()
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+    
+@router.get("/{post_id}/author")
+def get_post_author(post_id: int, session: Session = Depends(get_session)):
+    """Buscar usuário responsável do post"""
+    try:
+        # Buscar o post
+        post = session.get(Post, post_id)
+        if not post:
+            raise HTTPException(status_code=404, detail="Post não encontrado")
+        
+        # Buscar o autor do post
+        author = session.get(User, post.author_id)
+        if not author:
+            raise HTTPException(status_code=404, detail="Autor do post não encontrado")
+        
+        return {
+            "id": author.id,
+            "name": author.name,
+            "username": author.username,
+            "email": author.email,
+            "created_at": author.created_at.isoformat() if hasattr(author, 'created_at') else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro ao buscar autor do post: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+    
