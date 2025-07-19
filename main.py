@@ -22,9 +22,9 @@ app = FastAPI(
 if ENVIRONMENT == "production":
     # CORS restrito para produção
      origins = [
-        "https://blog-guide-dev-front.vercel.app",  # ✅ SEM barra final
-        "https://blog-guide-dev-front.vercel.app/", # ✅ COM barra final (para garantir)
-        "https://blogguidedev-api.fly.dev",          # ✅ Sua própria API
+        "https://blog-guide-dev-front.vercel.app",  
+        "https://blog-guide-dev-front.vercel.app/", 
+        "https://blogguidedev-api.fly.dev",          
     ]
 else:
     # CORS amplo para desenvolvimento
