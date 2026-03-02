@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15
+    container_name: blog_db_container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: blog_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:root@db:5432/blog_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ../:/app
+
+volumes:
+  db_data:
+    name: blog_api_data
