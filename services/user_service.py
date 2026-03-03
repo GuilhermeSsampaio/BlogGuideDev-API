@@ -40,7 +40,7 @@ def register_blogguide_user(
 
     auth_provider = AuthProvider(
         user_id=user_base.id,
-        provider="local",
+        provider="password",
         password_hash=hash_password(user_data.password),
     )
     session.add(auth_provider)
@@ -85,8 +85,8 @@ def edit_profile(
     """Atualiza o perfil do usuário autenticado."""
     profile = get_profile_or_404(session, user_uuid)
 
-    if updates.bios is not None:
-        profile.bios = updates.bios
+    if updates.bio is not None:
+        profile.bio = updates.bio
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)

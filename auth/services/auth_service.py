@@ -37,7 +37,7 @@ def authenticate_user(session: Session, email: str, password: str) -> User | Non
         return None
 
     statement = select(AuthProvider).where(
-        AuthProvider.user_id == user.id, AuthProvider.provider == "local"
+        AuthProvider.user_id == user.id, AuthProvider.provider == "password"
     )
 
     provider = session.exec(statement).first()
