@@ -6,6 +6,7 @@ from typing import Optional
 class BlogguideUserUpdate(BaseModel):
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
+    empresa: Optional[str] = None
 
 
 class BlogguideUserResponse(BaseModel):
@@ -13,8 +14,10 @@ class BlogguideUserResponse(BaseModel):
     username: str
     email: EmailStr
     user_id: UUID
+    tipo_perfil: str
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
+    empresa: Optional[str] = None
     verified: bool
 
     model_config = ConfigDict(from_attributes=True)
