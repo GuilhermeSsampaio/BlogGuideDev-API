@@ -20,6 +20,8 @@ from repository.crud import (
 )
 from schemas.blogguide_user_schema import BlogguideUserResponse
 from schemas.post_schema import PostPublicResponse, PostAuthorResponse, PostResponse
+from auth.schemas.auth_schema import UserRegister
+from services.user_service import register_blogguide_user
 
 
 router = APIRouter()
@@ -41,6 +43,15 @@ def stats(
 
 
 # ── Users ──────────────────────────────────────────────
+
+
+@router.post("/users", response_model=BlogguideUserResponse)
+def admin_create_user(
+    user_data: UserRegister,
+    session: SessionDep,
+    _: str = Depends(require_role(TipoPerfil.admin)),
+):
+    return register_blogguide_user(session, user_data)
 
 
 @router.get("/users", response_model=List[BlogguideUserResponse])

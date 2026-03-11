@@ -135,6 +135,8 @@ def update_user_post(
         post.content = post_data.content
     if post_data.excerpt is not None:
         post.excerpt = post_data.excerpt
+    if post_data.image_url is not None:
+        post.image_url = post_data.image_url
     if post_data.published is not None:
         post.published = post_data.published
 

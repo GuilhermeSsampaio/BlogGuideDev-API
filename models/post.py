@@ -14,6 +14,7 @@ class Post(SQLModel, table=True):
     title: str = Field(index=True)
     content: str
     excerpt: Optional[str] | None
+    image_url: Optional[str] | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     published: bool = Field(default=False)

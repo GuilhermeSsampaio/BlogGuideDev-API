@@ -14,3 +14,4 @@ def setup_models():
     from models.forum import Forum
     from models.comentario import Comentario
     from models.curtida import Curtida
+    from models.vaga import Vaga

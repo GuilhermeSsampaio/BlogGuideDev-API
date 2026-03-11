@@ -16,6 +16,7 @@ def _to_public_response(post) -> PostPublicResponse:
         title=post.title,
         content=post.content,
         excerpt=post.excerpt,
+        image_url=post.image_url,
         created_at=post.created_at,
         updated_at=post.updated_at,
         author=PostAuthorResponse(

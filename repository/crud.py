@@ -8,6 +8,7 @@ from models.post import Post
 from models.forum import Forum
 from models.comentario import Comentario
 from models.curtida import Curtida
+from models.vaga import Vaga
 from auth.models.user import User
 from auth.models.auth_provider import AuthProvider
 from sqlalchemy import func
@@ -56,6 +57,7 @@ def create_post(session: Session, blogguide_user_id: UUID, post_data) -> Post:
         title=post_data.title,
         content=post_data.content,
         excerpt=post_data.excerpt,
+        image_url=post_data.image_url,
         published=post_data.published,
     )
     session.add(post)
@@ -358,3 +360,122 @@ def get_admin_stats(session: Session) -> dict:
         "total_comentarios": total_comentarios,
         "total_curtidas": total_curtidas,
     }
+
+
+# ── Vagas ──────────────────────────────────────────────────
+
+
+def list_vagas_ativas(session: Session) -> List[Vaga]:
+    """Lista todas as vagas ativas, com dados do recrutador."""
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(Vaga.ativa == True)
+        .order_by(Vaga.data_criacao.desc())
+    ).all()
+
+
+def get_vaga_by_id(session: Session, vaga_id: UUID) -> Optional[Vaga]:
+    """Busca uma vaga pelo ID com dados do recrutador."""
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(Vaga.id == vaga_id)
+    ).first()
+
+
+def list_vagas_by_recrutador(session: Session, recrutador_id: UUID) -> List[Vaga]:
+    """Lista vagas de um recrutador específico."""
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(Vaga.recrutador_id == recrutador_id)
+        .order_by(Vaga.data_criacao.desc())
+    ).all()
+
+
+def create_vaga(session: Session, recrutador_id: UUID, vaga_data) -> Vaga:
+    """Cria uma nova vaga."""
+    vaga = Vaga(
+        titulo=vaga_data.titulo,
+        descricao=vaga_data.descricao,
+        empresa=vaga_data.empresa,
+        localidade=vaga_data.localidade,
+        tipo_contrato=vaga_data.tipo_contrato,
+        link=vaga_data.link,
+        recrutador_id=recrutador_id,
+    )
+    session.add(vaga)
+    session.commit()
+    session.refresh(vaga)
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(Vaga.id == vaga.id)
+    ).first()
+
+
+def update_vaga(session: Session, vaga: Vaga) -> Vaga:
+    """Atualiza uma vaga."""
+    session.add(vaga)
+    session.commit()
+    session.refresh(vaga)
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(Vaga.id == vaga.id)
+    ).first()
+
+
+def delete_vaga(session: Session, vaga_id: UUID) -> bool:
+    """Deleta uma vaga."""
+    vaga = session.get(Vaga, vaga_id)
+    if vaga:
+        session.delete(vaga)
+        session.commit()
+        return True
+    return False
+
+
+# ── Pesquisa ──────────────────────────────────────────────
+
+
+def search_posts(session: Session, query: str) -> List[Post]:
+    """Busca posts publicados por título ou conteúdo."""
+    pattern = f"%{query}%"
+    return session.exec(
+        select(Post)
+        .options(joinedload(Post.blogguide_user).joinedload(BlogguideUser.user))
+        .where(
+            Post.published == True,
+            (Post.title.ilike(pattern)) | (Post.content.ilike(pattern)) | (Post.excerpt.ilike(pattern)),
+        )
+        .order_by(Post.created_at.desc())
+    ).all()
+
+
+def search_forum(session: Session, query: str) -> List[Forum]:
+    """Busca tópicos do fórum por título ou descrição."""
+    pattern = f"%{query}%"
+    return session.exec(
+        select(Forum)
+        .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
+        .where(
+            (Forum.titulo.ilike(pattern)) | (Forum.descricao.ilike(pattern)),
+        )
+        .order_by(Forum.data_criacao.desc())
+    ).all()
+
+
+def search_vagas(session: Session, query: str) -> List[Vaga]:
+    """Busca vagas ativas por título, empresa ou descrição."""
+    pattern = f"%{query}%"
+    return session.exec(
+        select(Vaga)
+        .options(joinedload(Vaga.recrutador).joinedload(BlogguideUser.user))
+        .where(
+            Vaga.ativa == True,
+            (Vaga.titulo.ilike(pattern)) | (Vaga.empresa.ilike(pattern)) | (Vaga.descricao.ilike(pattern)),
+        )
+        .order_by(Vaga.data_criacao.desc())
+    ).all()
