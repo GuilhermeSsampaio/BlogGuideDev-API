@@ -21,3 +21,8 @@ setup_routers(app)
 @app.get("/")
 async def root():
     return {"Bem vindo": "GuiSamp api"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
