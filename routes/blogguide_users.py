@@ -4,7 +4,8 @@ from uuid import UUID
 
 from auth.schemas.auth_schema import UserLogin, UserRegister
 from auth.schemas.token_schema import TokenResponse
-from auth.security.dependencies import current_user
+from auth.security.dependencies import current_user, require_role
+from models.blogguide_user import TipoPerfil
 from config.db import SessionDep
 
 from schemas.blogguide_user_schema import (
@@ -75,7 +76,7 @@ def update_profile(
 def save_post(
     post_data: PostRegister,
     session: SessionDep,
-    user_id: str = Depends(current_user),
+    user_id: str = Depends(require_role(TipoPerfil.admin)),
 ):
     return save_post_for_user(session, UUID(user_id), post_data)
 
@@ -90,7 +91,7 @@ def update_post(
     post_data: PostUpdate,
     session: SessionDep,
     post_id: str,
-    user_id: str = Depends(current_user),
+    user_id: str = Depends(require_role(TipoPerfil.admin)),
 ):
     return update_user_post(session, UUID(user_id), UUID(post_id), post_data)
 
@@ -99,6 +100,6 @@ def update_post(
 def delete_post(
     session: SessionDep,
     post_id: str,
-    user_id: str = Depends(current_user),
+    user_id: str = Depends(require_role(TipoPerfil.admin)),
 ):
     return delete_user_post(session, UUID(user_id), UUID(post_id))

@@ -22,9 +22,9 @@ def get_blogguide_user_by_user_id(
     ).first()
 
 
-def create_blogguide_user(session: Session, user_uuid: UUID) -> BlogguideUser:
+def create_blogguide_user(session: Session, user_uuid: UUID, tipo_perfil: str = "user") -> BlogguideUser:
     """Cria um novo perfil Blogguide vinculado ao user_id."""
-    profile = BlogguideUser(user_id=user_uuid, verified=False)
+    profile = BlogguideUser(user_id=user_uuid, tipo_perfil=tipo_perfil, verified=False)
     session.add(profile)
     session.commit()
     session.refresh(profile)

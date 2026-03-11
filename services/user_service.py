@@ -46,7 +46,7 @@ def register_blogguide_user(
     session.add(auth_provider)
     session.commit()
 
-    profile = create_blogguide_user(session, user_base.id)
+    profile = create_blogguide_user(session, user_base.id, user_data.tipo_perfil)
     return to_blogguide_response(profile)
 
 
@@ -87,6 +87,8 @@ def edit_profile(
 
     if updates.bio is not None:
         profile.bio = updates.bio
+    if updates.empresa is not None:
+        profile.empresa = updates.empresa
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)
