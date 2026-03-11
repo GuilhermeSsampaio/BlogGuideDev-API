@@ -5,6 +5,7 @@ from routes.conteudos import router as conteudos_router
 from routes.forum import router as forum_router
 from routes.comentarios import router as comentarios_router
 from routes.curtidas import router as curtidas_router
+from routes.admin import router as admin_router
 
 blogguide_router = APIRouter()
 
@@ -14,3 +15,4 @@ blogguide_router.include_router(conteudos_router, prefix="/conteudos", tags=["Co
 blogguide_router.include_router(forum_router, prefix="/forum", tags=["Fórum"])
 blogguide_router.include_router(comentarios_router, prefix="/comentarios", tags=["Comentários"])
 blogguide_router.include_router(curtidas_router, prefix="/curtidas", tags=["Curtidas"])
+blogguide_router.include_router(admin_router, prefix="/admin", tags=["Admin"])
