@@ -87,3 +87,22 @@ def delete_post(session: Session, post_id: UUID) -> bool:
         session.commit()
         return True
     return False
+
+
+def list_published_posts(session: Session) -> List[Post]:
+    """Lista todos os posts publicados, com dados do autor."""
+    return session.exec(
+        select(Post)
+        .options(joinedload(Post.blogguide_user).joinedload(BlogguideUser.user))
+        .where(Post.published == True)
+        .order_by(Post.created_at.desc())
+    ).all()
+
+
+def get_published_post_by_id(session: Session, post_id: UUID) -> Optional[Post]:
+    """Busca um post publicado pelo ID, com dados do autor."""
+    return session.exec(
+        select(Post)
+        .options(joinedload(Post.blogguide_user).joinedload(BlogguideUser.user))
+        .where(Post.id == post_id, Post.published == True)
+    ).first()
