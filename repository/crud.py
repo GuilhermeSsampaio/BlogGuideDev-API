@@ -5,6 +5,10 @@ from sqlalchemy.orm import joinedload
 
 from models.blogguide_user import BlogguideUser
 from models.post import Post
+from models.forum import Forum
+from models.comentario import Comentario
+from models.curtida import Curtida
+from sqlalchemy import func
 
 
 def list_blogguide_users(session: Session) -> List[BlogguideUser]:
@@ -106,3 +110,150 @@ def get_published_post_by_id(session: Session, post_id: UUID) -> Optional[Post]:
         .options(joinedload(Post.blogguide_user).joinedload(BlogguideUser.user))
         .where(Post.id == post_id, Post.published == True)
     ).first()
+
+
+# ── Forum ────────────────────────────────────────────────
+
+
+def list_forum_topics(session: Session) -> List[Forum]:
+    """Lista todos os tópicos do fórum, com dados do autor."""
+    return session.exec(
+        select(Forum)
+        .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
+        .order_by(Forum.data_criacao.desc())
+    ).all()
+
+
+def get_forum_topic_by_id(session: Session, topic_id: UUID) -> Optional[Forum]:
+    """Busca um tópico pelo ID, com dados do autor."""
+    return session.exec(
+        select(Forum)
+        .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
+        .where(Forum.id == topic_id)
+    ).first()
+
+
+def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
+    """Cria um novo tópico no fórum."""
+    topic = Forum(
+        titulo=topic_data.titulo,
+        descricao=topic_data.descricao,
+        tipo=topic_data.tipo,
+        autor_id=autor_id,
+    )
+    session.add(topic)
+    session.commit()
+    session.refresh(topic)
+    return session.exec(
+        select(Forum)
+        .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
+        .where(Forum.id == topic.id)
+    ).first()
+
+
+def delete_forum_topic(session: Session, topic_id: UUID) -> bool:
+    """Deleta um tópico do fórum."""
+    topic = get_forum_topic_by_id(session, topic_id)
+    if topic:
+        session.delete(topic)
+        session.commit()
+        return True
+    return False
+
+
+# ── Comentários ────────────────────────────────────────────────
+
+
+def list_comentarios(session: Session, referencia_id: UUID, tipo_referencia: str) -> List[Comentario]:
+    """Lista comentários de uma referência (post ou forum)."""
+    return session.exec(
+        select(Comentario)
+        .options(joinedload(Comentario.autor).joinedload(BlogguideUser.user))
+        .where(
+            Comentario.referencia_id == referencia_id,
+            Comentario.tipo_referencia == tipo_referencia,
+        )
+        .order_by(Comentario.data.asc())
+    ).all()
+
+
+def create_comentario(
+    session: Session, autor_id: UUID, referencia_id: UUID, tipo_referencia: str, conteudo: str
+) -> Comentario:
+    """Cria um comentário."""
+    comentario = Comentario(
+        conteudo=conteudo,
+        autor_id=autor_id,
+        referencia_id=referencia_id,
+        tipo_referencia=tipo_referencia,
+    )
+    session.add(comentario)
+    session.commit()
+    session.refresh(comentario)
+    return session.exec(
+        select(Comentario)
+        .options(joinedload(Comentario.autor).joinedload(BlogguideUser.user))
+        .where(Comentario.id == comentario.id)
+    ).first()
+
+
+def delete_comentario(session: Session, comentario_id: UUID) -> bool:
+    """Deleta um comentário."""
+    comentario = session.get(Comentario, comentario_id)
+    if comentario:
+        session.delete(comentario)
+        session.commit()
+        return True
+    return False
+
+
+def get_comentario_by_id(session: Session, comentario_id: UUID) -> Optional[Comentario]:
+    """Busca um comentário pelo ID."""
+    return session.exec(
+        select(Comentario)
+        .options(joinedload(Comentario.autor).joinedload(BlogguideUser.user))
+        .where(Comentario.id == comentario_id)
+    ).first()
+
+
+# ── Curtidas ─────────────────────────────────────────────────
+
+
+def get_curtida(session: Session, usuario_id: UUID, referencia_id: UUID, tipo_referencia: str) -> Optional[Curtida]:
+    """Busca uma curtida específica do usuário."""
+    return session.exec(
+        select(Curtida).where(
+            Curtida.usuario_id == usuario_id,
+            Curtida.referencia_id == referencia_id,
+            Curtida.tipo_referencia == tipo_referencia,
+        )
+    ).first()
+
+
+def toggle_curtida(session: Session, usuario_id: UUID, referencia_id: UUID, tipo_referencia: str) -> bool:
+    """Alterna curtida. Retorna True se curtiu, False se descurtiu."""
+    existing = get_curtida(session, usuario_id, referencia_id, tipo_referencia)
+    if existing:
+        session.delete(existing)
+        session.commit()
+        return False
+    else:
+        curtida = Curtida(
+            usuario_id=usuario_id,
+            referencia_id=referencia_id,
+            tipo_referencia=tipo_referencia,
+        )
+        session.add(curtida)
+        session.commit()
+        return True
+
+
+def count_curtidas(session: Session, referencia_id: UUID, tipo_referencia: str) -> int:
+    """Conta total de curtidas de uma referência."""
+    result = session.exec(
+        select(func.count(Curtida.id)).where(
+            Curtida.referencia_id == referencia_id,
+            Curtida.tipo_referencia == tipo_referencia,
+        )
+    ).one()
+    return result

@@ -11,3 +11,6 @@ def setup_models():
     # Módulo CookAI
     from models.blogguide_user import BlogguideUser
     from models.post import Post
+    from models.forum import Forum
+    from models.comentario import Comentario
+    from models.curtida import Curtida
