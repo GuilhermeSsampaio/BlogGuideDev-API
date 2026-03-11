@@ -9,6 +9,10 @@ class BlogguideUserUpdate(BaseModel):
     empresa: Optional[str] = None
 
 
+class RoleUpdate(BaseModel):
+    tipo_perfil: str
+
+
 class BlogguideUserResponse(BaseModel):
     id: UUID
     username: str

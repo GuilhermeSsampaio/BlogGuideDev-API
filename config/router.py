@@ -11,8 +11,8 @@ from routes.search import router as search_router
 
 blogguide_router = APIRouter()
 
-blogguide_router.include_router(users_router, prefix="/users", tags=["Blogguide - Users"])
-blogguide_router.include_router(posts_router, prefix="/posts", tags=["Blogguide - Posts"])
+blogguide_router.include_router(users_router, prefix="/users", tags=["Users"])
+blogguide_router.include_router(posts_router, prefix="/posts", tags=["Posts"])
 blogguide_router.include_router(conteudos_router, prefix="/conteudos", tags=["Conteúdos - Público"])
 blogguide_router.include_router(forum_router, prefix="/forum", tags=["Fórum"])
 blogguide_router.include_router(comentarios_router, prefix="/comentarios", tags=["Comentários"])
