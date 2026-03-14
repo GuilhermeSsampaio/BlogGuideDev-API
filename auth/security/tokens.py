@@ -19,7 +19,7 @@ def create_refresh_token(data: dict):
 
 def decode_token(token: str):
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None
 
@@ -27,7 +27,7 @@ def decode_token(token: str):
 def decode_refresh_token(token: str):
     """Decodifica um refresh token e valida que é do tipo refresh."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "refresh":
             return None
         return payload

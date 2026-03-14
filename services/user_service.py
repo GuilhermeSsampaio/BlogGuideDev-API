@@ -46,7 +46,13 @@ def register_blogguide_user(
     session.add(auth_provider)
     session.commit()
 
-    profile = create_blogguide_user(session, user_base.id, user_data.tipo_perfil)
+    profile = create_blogguide_user(
+        session,
+        user_base.id,
+        user_data.tipo_perfil,
+        user_data.nome_completo,
+        user_data.bio
+    )
     return to_blogguide_response(profile)
 
 
@@ -85,13 +91,25 @@ def edit_profile(
     """Atualiza o perfil do usuário autenticado."""
     profile = get_profile_or_404(session, user_uuid)
 
+    if updates.nome_completo is not None:
+        profile.nome_completo = updates.nome_completo
     if updates.bio is not None:
         profile.bio = updates.bio
     if updates.empresa is not None:
         profile.empresa = updates.empresa
+    if updates.github is not None:
+        profile.github = updates.github
+    if updates.linkedin is not None:
+        profile.linkedin = updates.linkedin
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)
+
+
+def get_user_stats(session: Session, user_uuid: UUID) -> dict:
+    """Retorna estatisticas do perfil do usuario."""
+    profile = get_profile_or_404(session, user_uuid)
+    return count_user_stats(session, profile.id)
 
 
 def save_post_for_user(

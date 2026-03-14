@@ -6,16 +6,16 @@ from config.settings import SECRET_KEY, HTTPS_ONLY
 
 def setup_middlewares(app: FastAPI):
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:5173", "https://blog-guide-dev-front.vercel.app" ],
-        allow_credentials=True,
-        allow_methods=["*"], 
-        allow_headers=["*"],
-    )
-
-    app.add_middleware(
         SessionMiddleware,
         secret_key=SECRET_KEY,
         same_site="lax",
         https_only=HTTPS_ONLY,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "https://blog-guide-dev-front.vercel.app" ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )

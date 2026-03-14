@@ -7,6 +7,8 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str
     tipo_perfil: Optional[str] = "user"
+    nome_completo: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class UserLogin(BaseModel):

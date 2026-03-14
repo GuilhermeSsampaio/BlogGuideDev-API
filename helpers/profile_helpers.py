@@ -25,8 +25,11 @@ def to_blogguide_response(profile: BlogguideUser) -> BlogguideUserResponse:
         username=profile.user.username,
         email=profile.user.email,
         tipo_perfil=profile.tipo_perfil,
+        nome_completo=profile.nome_completo,
         bio=profile.bio,
         profile_picture=profile.profile_picture,
         empresa=profile.empresa,
+        github=profile.github,
+        linkedin=profile.linkedin,
         verified=profile.verified,
     )

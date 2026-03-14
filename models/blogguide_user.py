@@ -19,9 +19,12 @@ class BlogguideUser(SQLModel, table=True):
 
     user_id: UUID = Field(foreign_key="user.id", unique=True, index=True)
     tipo_perfil: str = Field(default=TipoPerfil.user)
+    nome_completo: Optional[str] | None = None
     bio: Optional[str] | None = None
     profile_picture: Optional[str] | None = None
     empresa: Optional[str] | None = None
+    github: Optional[str] | None = None
+    linkedin: Optional[str] | None = None
     verified: Optional[bool] = Field(default=False)
     posts: list["Post"] = Relationship(back_populates="blogguide_user")
 

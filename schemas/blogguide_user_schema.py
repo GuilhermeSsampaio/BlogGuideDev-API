@@ -4,9 +4,12 @@ from typing import Optional
 
 
 class BlogguideUserUpdate(BaseModel):
+    nome_completo: Optional[str] = None
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     empresa: Optional[str] = None
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
 
 
 class RoleUpdate(BaseModel):
@@ -19,9 +22,18 @@ class BlogguideUserResponse(BaseModel):
     email: EmailStr
     user_id: UUID
     tipo_perfil: str
+    nome_completo: Optional[str] = None
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     empresa: Optional[str] = None
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
     verified: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserStatsResponse(BaseModel):
+    curtidas: int
+    comentarios: int
+    foruns: int

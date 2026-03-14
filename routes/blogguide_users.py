@@ -11,6 +11,7 @@ from config.db import SessionDep
 from schemas.blogguide_user_schema import (
     BlogguideUserResponse,
     BlogguideUserUpdate,
+    UserStatsResponse,
 )
 from schemas.post_schema import (
     PostRegister,
@@ -22,6 +23,7 @@ from services.user_service import (
     authenticate_blogguide_user,
     edit_profile,
     get_my_profile,
+    get_user_stats,
     list_all_blogguide_users,
     register_blogguide_user,
     save_post_for_user,
@@ -58,6 +60,11 @@ def get_blogguide_users(session: SessionDep):
 @router.get("/me", response_model=BlogguideUserResponse)
 def me(session: SessionDep, user_id: str = Depends(current_user)):
     return get_my_profile(session, UUID(user_id))
+
+
+@router.get("/me/stats", response_model=UserStatsResponse)
+def my_stats(session: SessionDep, user_id: str = Depends(current_user)):
+    return get_user_stats(session, UUID(user_id))
 
 
 @router.put("/edit_profile", response_model=BlogguideUserResponse)
