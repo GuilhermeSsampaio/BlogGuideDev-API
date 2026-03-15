@@ -13,7 +13,7 @@ def list_forum_topics(session: Session) -> List[Forum]:
         select(Forum)
         .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
         .order_by(Forum.data_criacao.desc())
-    ).all()
+    ).unique().all()
 
 
 def get_forum_topic_by_id(session: Session, topic_id: UUID) -> Optional[Forum]:
@@ -22,7 +22,7 @@ def get_forum_topic_by_id(session: Session, topic_id: UUID) -> Optional[Forum]:
         select(Forum)
         .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
         .where(Forum.id == topic_id)
-    ).first()
+    ).unique().first()
 
 
 def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
@@ -31,6 +31,7 @@ def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
         titulo=topic_data.titulo,
         descricao=topic_data.descricao,
         tipo=topic_data.tipo,
+        imagem_url=topic_data.imagem_url,
         autor_id=autor_id,
     )
     session.add(topic)
@@ -40,7 +41,7 @@ def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
         select(Forum)
         .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
         .where(Forum.id == topic.id)
-    ).first()
+    ).unique().first()
 
 
 def delete_forum_topic(session: Session, topic_id: UUID) -> bool:

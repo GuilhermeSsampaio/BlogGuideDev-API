@@ -27,13 +27,19 @@ def register(user_data: UserRegister, session: SessionDep):
 
 @router.post("/login", response_model=TokenResponse)
 def login(credentials: UserLogin, session: SessionDep):
-    tokens = login_user(session, credentials.email, credentials.password)
+    from auth.repository.crud import get_user_by_email
+    user = get_user_by_email(session, credentials.email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não cadastrado, faça seu registro."
+        )
 
+    tokens = login_user(session, credentials.email, credentials.password)
     if not tokens:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas"
         )
-
     return {**tokens, "token_type": "bearer"}
 
 

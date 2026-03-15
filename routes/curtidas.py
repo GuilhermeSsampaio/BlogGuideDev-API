@@ -9,7 +9,7 @@ from schemas.curtida_schema import CurtidaToggleResponse, CurtidaCountResponse
 
 router = APIRouter()
 
-TIPOS_VALIDOS = ("post", "forum", "comentario")
+TIPOS_VALIDOS = ("post", "forum", "comentario", "conteudo")
 
 
 @router.post("/{tipo_referencia}/{referencia_id}", response_model=CurtidaToggleResponse)

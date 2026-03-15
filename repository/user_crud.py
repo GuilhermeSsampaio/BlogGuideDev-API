@@ -10,7 +10,7 @@ from models.forum import Forum
 
 
 def list_blogguide_users(session: Session) -> List[BlogguideUser]:
-    return session.exec(select(BlogguideUser).options(joinedload(BlogguideUser.user))).all()
+    return session.exec(select(BlogguideUser).options(joinedload(BlogguideUser.user))).unique().all()
 
 
 def get_blogguide_user_by_user_id(
