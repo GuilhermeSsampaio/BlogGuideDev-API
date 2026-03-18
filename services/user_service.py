@@ -151,12 +151,24 @@ def update_user_post(
         post.title = post_data.title
     if post_data.content is not None:
         post.content = post_data.content
+    if post_data.subtitle is not None:
+        post.subtitle = post_data.subtitle
+    if post_data.sections is not None:
+        post.sections = post_data.sections
     if post_data.excerpt is not None:
         post.excerpt = post_data.excerpt
     if post_data.image_url is not None:
         post.image_url = post_data.image_url
     if post_data.published is not None:
         post.published = post_data.published
+    if post_data.categoryLabel is not None:
+        post.categoryLabel = post_data.categoryLabel
+    if post_data.categoryColor is not None:
+        post.categoryColor = post_data.categoryColor
+    if post_data.icon is not None:
+        post.icon = post_data.icon
+    if post_data.description is not None:
+        post.description = post_data.description
 
     post = update_post(session, post)
     return PostResponse.model_validate(post)

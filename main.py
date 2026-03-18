@@ -50,9 +50,9 @@ CONTEUDOS_SEED = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
-    with Session(engine) as session:
-        for slug, titulo in CONTEUDOS_SEED:
-            create_conteudo_if_not_exists(session, slug, titulo)
+    # with Session(engine) as session:
+    #     for slug, titulo in CONTEUDOS_SEED:
+    #         create_conteudo_if_not_exists(session, slug, titulo)
     yield
 
 
