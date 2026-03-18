@@ -13,6 +13,7 @@ class Forum(SQLModel, table=True):
     titulo: str = Field(index=True)
     descricao: str
     tipo: Optional[str] = None
+    imagem_url: Optional[str] = None
     data_criacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     autor_id: UUID = Field(foreign_key="blogguideuser.id", index=True)
 

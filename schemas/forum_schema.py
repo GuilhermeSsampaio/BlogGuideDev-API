@@ -8,12 +8,14 @@ class ForumCreate(BaseModel):
     titulo: str
     descricao: str
     tipo: Optional[str] = None
+    imagem_url: Optional[str] = None
 
 
 class ForumUpdate(BaseModel):
     titulo: Optional[str] = None
     descricao: Optional[str] = None
     tipo: Optional[str] = None
+    imagem_url: Optional[str] = None
 
 
 class ForumAuthorResponse(BaseModel):
@@ -28,6 +30,7 @@ class ForumResponse(BaseModel):
     titulo: str
     descricao: str
     tipo: Optional[str] = None
+    imagem_url: Optional[str] = None
     data_criacao: datetime
     autor: ForumAuthorResponse
 

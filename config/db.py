@@ -10,10 +10,16 @@ load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL")
 RESET_DB = os.environ.get("RESET_DB", "False")
 
+_connect_args = {}
+if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
+    _connect_args = {"check_same_thread": False}
+else:
+    _connect_args = {"client_encoding": "utf8"}
+
 engine = create_engine(
     DATABASE_URL,
     echo=True,  # true para mostrar as queries no console
-    connect_args={"client_encoding": "utf8"},
+    connect_args=_connect_args,
     pool_pre_ping=True,  # verificar se está ativo antes de conectar
 )
 

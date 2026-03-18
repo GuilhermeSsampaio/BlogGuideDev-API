@@ -31,7 +31,7 @@ def require_role(*allowed_roles: TipoPerfil):
         profile = get_blogguide_user_by_user_id(session, UUID(user_id))
         if not profile:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="Perfil não encontrado",
             )
         if profile.tipo_perfil not in [r.value for r in allowed_roles]:

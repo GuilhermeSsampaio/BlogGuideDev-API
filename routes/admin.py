@@ -1,7 +1,6 @@
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException, status
 from uuid import UUID
-from pydantic import BaseModel
 
 from auth.security.dependencies import require_role
 from models.blogguide_user import TipoPerfil
@@ -18,17 +17,13 @@ from repository.crud import (
     delete_forum_topic,
     get_admin_stats,
 )
-from schemas.blogguide_user_schema import BlogguideUserResponse
+from schemas.blogguide_user_schema import BlogguideUserResponse, RoleUpdate
 from schemas.post_schema import PostPublicResponse, PostAuthorResponse, PostResponse
 from auth.schemas.auth_schema import UserRegister
 from services.user_service import register_blogguide_user
 
 
 router = APIRouter()
-
-
-class RoleUpdate(BaseModel):
-    tipo_perfil: str
 
 
 # ── Dashboard ──────────────────────────────────────────

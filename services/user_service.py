@@ -46,7 +46,13 @@ def register_blogguide_user(
     session.add(auth_provider)
     session.commit()
 
-    profile = create_blogguide_user(session, user_base.id, user_data.tipo_perfil)
+    profile = create_blogguide_user(
+        session,
+        user_base.id,
+        user_data.tipo_perfil,
+        user_data.nome_completo,
+        user_data.bio
+    )
     return to_blogguide_response(profile)
 
 
@@ -85,13 +91,25 @@ def edit_profile(
     """Atualiza o perfil do usuário autenticado."""
     profile = get_profile_or_404(session, user_uuid)
 
+    if updates.nome_completo is not None:
+        profile.nome_completo = updates.nome_completo
     if updates.bio is not None:
         profile.bio = updates.bio
     if updates.empresa is not None:
         profile.empresa = updates.empresa
+    if updates.github is not None:
+        profile.github = updates.github
+    if updates.linkedin is not None:
+        profile.linkedin = updates.linkedin
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)
+
+
+def get_user_stats(session: Session, user_uuid: UUID) -> dict:
+    """Retorna estatisticas do perfil do usuario."""
+    profile = get_profile_or_404(session, user_uuid)
+    return count_user_stats(session, profile.id)
 
 
 def save_post_for_user(
@@ -133,12 +151,24 @@ def update_user_post(
         post.title = post_data.title
     if post_data.content is not None:
         post.content = post_data.content
+    if post_data.subtitle is not None:
+        post.subtitle = post_data.subtitle
+    if post_data.sections is not None:
+        post.sections = post_data.sections
     if post_data.excerpt is not None:
         post.excerpt = post_data.excerpt
     if post_data.image_url is not None:
         post.image_url = post_data.image_url
     if post_data.published is not None:
         post.published = post_data.published
+    if post_data.categoryLabel is not None:
+        post.categoryLabel = post_data.categoryLabel
+    if post_data.categoryColor is not None:
+        post.categoryColor = post_data.categoryColor
+    if post_data.icon is not None:
+        post.icon = post_data.icon
+    if post_data.description is not None:
+        post.description = post_data.description
 
     post = update_post(session, post)
     return PostResponse.model_validate(post)
