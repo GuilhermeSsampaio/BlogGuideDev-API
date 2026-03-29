@@ -9,6 +9,7 @@ class UserRegister(BaseModel):
     tipo_perfil: Optional[str] = "user"
     nome_completo: Optional[str] = None
     bio: Optional[str] = None
+    cnpj: Optional[str] = None
 
 
 class UserLogin(BaseModel):
