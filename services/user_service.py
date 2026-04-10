@@ -2,6 +2,10 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
+import httpx
+from validate_docbr import CNPJ
+
+cnpj_validator = CNPJ()
 
 from auth.models.auth_provider import AuthProvider
 from auth.models.user import User
@@ -46,12 +50,37 @@ def register_blogguide_user(
     session.add(auth_provider)
     session.commit()
 
+    if user_data.tipo_perfil == "recrutador":
+        if not user_data.cnpj:
+            raise HTTPException(status_code=400, detail="CNPJ é obrigatório para recrutadores")
+        
+        # Validação matemática
+        if not cnpj_validator.validate(user_data.cnpj):
+            raise HTTPException(status_code=400, detail="CNPJ inválido")
+            
+        # Validação Brasil API
+        try:
+            with httpx.Client() as client:
+                resp = client.get(f"https://brasilapi.com.br/api/cnpj/v1/{user_data.cnpj}")
+                if resp.status_code != 200:
+                    raise HTTPException(status_code=400, detail="CNPJ não encontrado")
+                
+                data = resp.json()
+                if data.get("descricao_situacao_cadastral") != "ATIVA":
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Empresa não permitida. Situação: {data.get('descricao_situacao_cadastral')}"
+                    )
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="Erro ao validar CNPJ com a Brasil API")
+
     profile = create_blogguide_user(
         session,
         user_base.id,
         user_data.tipo_perfil,
         user_data.nome_completo,
-        user_data.bio
+        user_data.bio,
+        user_data.cnpj
     )
     return to_blogguide_response(profile)
 

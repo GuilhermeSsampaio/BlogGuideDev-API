@@ -23,6 +23,7 @@ class BlogguideUser(SQLModel, table=True):
     bio: Optional[str] | None = None
     profile_picture: Optional[str] | None = None
     empresa: Optional[str] | None = None
+    cnpj: Optional[str] = Field(default=None, nullable=True)
     github: Optional[str] | None = None
     linkedin: Optional[str] | None = None
     verified: Optional[bool] = Field(default=False)

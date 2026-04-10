@@ -8,6 +8,7 @@ class BlogguideUserUpdate(BaseModel):
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     empresa: Optional[str] = None
+    cnpj: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
 
@@ -26,6 +27,7 @@ class BlogguideUserResponse(BaseModel):
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     empresa: Optional[str] = None
+    cnpj: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
     verified: bool

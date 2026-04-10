@@ -29,7 +29,8 @@ def create_blogguide_user(
     user_uuid: UUID,
     tipo_perfil: str = "user",
     nome_completo: Optional[str] = None,
-    bio: Optional[str] = None
+    bio: Optional[str] = None,
+    cnpj: Optional[str] = None,
 ) -> BlogguideUser:
     """Cria um novo perfil Blogguide vinculado ao user_id."""
     profile = BlogguideUser(
@@ -37,6 +38,7 @@ def create_blogguide_user(
         tipo_perfil=tipo_perfil,
         nome_completo=nome_completo,
         bio=bio,
+        cnpj=cnpj,
         verified=False
     )
     session.add(profile)
