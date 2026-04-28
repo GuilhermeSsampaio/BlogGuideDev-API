@@ -1,5 +1,6 @@
-from uuid import UUID
-from fastapi import HTTPException, status
+from uuid import UUID, uuid4
+import os
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 import httpx
@@ -16,6 +17,11 @@ from auth.services.auth_service import login_user
 from helpers.profile_helpers import (
     get_profile_or_404,
     to_blogguide_response
+)
+from config.settings import (
+    PROFILE_UPLOAD_DIR,
+    MAX_AVATAR_SIZE_MB,
+    ALLOWED_AVATAR_EXTS,
 )
 from repository.crud import *
 from schemas.blogguide_user_schema import (
@@ -130,6 +136,66 @@ def edit_profile(
         profile.github = updates.github
     if updates.linkedin is not None:
         profile.linkedin = updates.linkedin
+    if updates.profile_picture is not None:
+        profile.profile_picture = updates.profile_picture
+
+    profile = update_blogguide_user(session, profile)
+    return to_blogguide_response(profile)
+
+
+async def edit_profile_with_avatar(
+    session: Session,
+    user_uuid: UUID,
+    nome_completo: str | None,
+    bio: str | None,
+    github: str | None,
+    linkedin: str | None,
+    avatar: UploadFile | None,
+) -> BlogguideUserUpdate:
+    """Atualiza dados do perfil e salva o avatar enviado via multipart."""
+    profile = get_profile_or_404(session, user_uuid)
+
+    def normalize_value(value: str | None) -> str | None:
+        return value if value not in (None, "") else None
+
+    nome_completo = normalize_value(nome_completo)
+    bio = normalize_value(bio)
+    github = normalize_value(github)
+    linkedin = normalize_value(linkedin)
+
+    if nome_completo is not None:
+        profile.nome_completo = nome_completo
+    if bio is not None:
+        profile.bio = bio
+    if github is not None:
+        profile.github = github
+    if linkedin is not None:
+        profile.linkedin = linkedin
+
+    if avatar:
+        file_ext = os.path.splitext(avatar.filename or "")[1].lower()
+        if file_ext not in ALLOWED_AVATAR_EXTS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de avatar nao permitido",
+            )
+
+        file_bytes = await avatar.read()
+        max_bytes = MAX_AVATAR_SIZE_MB * 1024 * 1024
+        if len(file_bytes) > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Avatar excede o tamanho maximo",
+            )
+
+        filename = f"{uuid4().hex}{file_ext}"
+        file_path = os.path.join(PROFILE_UPLOAD_DIR, filename)
+
+        # Salva o avatar localmente e atualiza a URL publica no perfil.
+        with open(file_path, "wb") as target:
+            target.write(file_bytes)
+
+        profile.profile_picture = f"/uploads/avatars/{filename}"
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)

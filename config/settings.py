@@ -16,3 +16,9 @@ GOOGLE_REDIRECT_URI = os.getenv(
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 HTTPS_ONLY = os.getenv("HTTPS_ONLY", "false").strip().lower() == "true"
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
+PROFILE_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "avatars")
+MAX_AVATAR_SIZE_MB = int(os.getenv("MAX_AVATAR_SIZE_MB", "5"))
+ALLOWED_AVATAR_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
