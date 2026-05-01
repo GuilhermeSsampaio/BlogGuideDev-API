@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from config.db import create_db_and_tables, engine
-from config.settings import API_TITLE, API_VERSION
+from config.settings import API_TITLE, API_VERSION, UPLOAD_DIR, PROFILE_UPLOAD_DIR
 from config.middlewares import setup_middlewares
 from config.routers import setup_routers
 from repository.conteudo_crud import create_conteudo_if_not_exists
@@ -50,13 +52,20 @@ CONTEUDOS_SEED = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+    os.makedirs(PROFILE_UPLOAD_DIR, exist_ok=True)
     # with Session(engine) as session:
     #     for slug, titulo in CONTEUDOS_SEED:
     #         create_conteudo_if_not_exists(session, slug, titulo)
     yield
 
 
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(PROFILE_UPLOAD_DIR, exist_ok=True)
+
 app = FastAPI(title=API_TITLE, version=API_VERSION, lifespan=lifespan)
+
+# Serve arquivos de upload (ex: avatar) via URL publica.
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 setup_middlewares(app)
 setup_routers(app)

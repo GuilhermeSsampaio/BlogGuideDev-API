@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, UploadFile, File, Form
 from uuid import UUID
 
 from auth.schemas.auth_schema import UserLogin, UserRegister
@@ -22,6 +22,7 @@ from schemas.post_schema import (
 from services.user_service import (
     authenticate_blogguide_user,
     edit_profile,
+    edit_profile_with_avatar,
     get_my_profile,
     get_user_stats,
     list_all_blogguide_users,
@@ -74,6 +75,28 @@ def update_profile(
     user_id: str = Depends(current_user),
 ):
     return edit_profile(session, UUID(user_id), updates)
+
+
+@router.put("/edit_profile_with_avatar", response_model=BlogguideUserResponse)
+async def update_profile_with_avatar(
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+    nome_completo: str | None = Form(None),
+    bio: str | None = Form(None),
+    github: str | None = Form(None),
+    linkedin: str | None = Form(None),
+    avatar: UploadFile | None = File(None),
+):
+    # Endpoint dedicado a multipart/form-data para avatar.
+    return await edit_profile_with_avatar(
+        session,
+        UUID(user_id),
+        nome_completo,
+        bio,
+        github,
+        linkedin,
+        avatar,
+    )
 
 
 # ── Posts ────────────────────────────────────────────────
