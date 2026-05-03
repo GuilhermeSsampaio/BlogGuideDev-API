@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_TITLE = "API do BlogGuide - Guilherme & Pedro"
 API_VERSION = "2.0"
@@ -8,8 +11,8 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 240  # 4 hours - Instagram style session
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 
-GOOGLE_CLIENT_ID = os.getenv("CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.getenv(
     "REDIRECT_URI", "http://localhost:8000/auth/google/callback"
 )
