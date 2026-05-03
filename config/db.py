@@ -1,4 +1,3 @@
-from math import e
 import os
 from typing import Annotated
 from dotenv import load_dotenv
@@ -8,7 +7,6 @@ from config.models import setup_models
 
 load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL")
-RESET_DB = os.environ.get("RESET_DB", "False")
 
 _connect_args = {}
 if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
@@ -25,27 +23,21 @@ engine = create_engine(
 
 
 def create_db_and_tables():
-    """ "
-    Cria as tabelas conforme os models definidos
-    Deve ser chamada uma vez ao iniciar o projeto ou atualizar modelos
+    """
+    Cria as tabelas conforme os models definidos.
+    O reset automático foi removido para evitar perda de dados.
     """
     # Garante que todos os modelos foram lidos e registrados no metadata
     setup_models()
-
-    should_reset = RESET_DB.strip().lower() == "true"
-
-    if should_reset:
-        SQLModel.metadata.drop_all(engine)
 
     # Cria as tabelas baseadas no que foi registrado
     SQLModel.metadata.create_all(engine)
 
 
 def get_session():
-    """ "
-    Cria uma sessão de conexão com o banco
-    Usada para trabalhas o crud dentro dos endpoints, deve ser usado
-    como dependência das rotas para acessar o banco de forma segura e automática
+    """
+    Cria uma sessão de conexão com o banco.
+    Usada como dependência das rotas para acesso seguro ao banco.
     """
     with Session(engine) as session:
         yield session

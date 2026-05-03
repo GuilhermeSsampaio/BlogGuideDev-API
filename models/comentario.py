@@ -15,5 +15,6 @@ class Comentario(SQLModel, table=True):
     autor_id: UUID = Field(foreign_key="blogguideuser.id", index=True)
     referencia_id: UUID = Field(index=True)
     tipo_referencia: str = Field(index=True)  # "post" ou "forum"
+    parent_id: Optional[UUID] = Field(default=None, foreign_key="comentario.id", index=True)
 
     autor: "BlogguideUser" = Relationship()

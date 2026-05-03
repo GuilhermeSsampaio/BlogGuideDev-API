@@ -32,6 +32,16 @@ from services.user_service import (
     update_user_post,
     delete_user_post,
 )
+from repository.crud import (
+    list_notificacoes_usuario,
+    count_unread_notificacoes,
+    mark_notificacao_as_read,
+)
+from schemas.notificacao_schema import (
+    NotificacaoListResponse,
+    NotificacaoReadResponse,
+    NotificacaoResponse,
+)
 
 router = APIRouter()
 
@@ -96,6 +106,36 @@ async def update_profile_with_avatar(
         github,
         linkedin,
         avatar,
+    )
+
+
+@router.get("/notificacoes", response_model=NotificacaoListResponse)
+def get_notificacoes(
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    profile = get_my_profile(session, UUID(user_id))
+    items = list_notificacoes_usuario(session, profile.id)
+    unread = count_unread_notificacoes(session, profile.id)
+    return NotificacaoListResponse(
+        unread_count=unread,
+        items=[NotificacaoResponse.model_validate(item) for item in items],
+    )
+
+
+@router.put("/notificacoes/{notificacao_id}/read", response_model=NotificacaoReadResponse)
+def read_notificacao(
+    notificacao_id: UUID,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    profile = get_my_profile(session, UUID(user_id))
+    notificacao = mark_notificacao_as_read(session, notificacao_id, profile.id)
+    if not notificacao:
+        return NotificacaoReadResponse(success=False, notificacao=None)
+    return NotificacaoReadResponse(
+        success=True,
+        notificacao=NotificacaoResponse.model_validate(notificacao),
     )
 
 

@@ -8,20 +8,36 @@ from models.comentario import Comentario
 
 
 def list_comentarios(session: Session, referencia_id: UUID, tipo_referencia: str) -> List[Comentario]:
-    """Lista comentários de uma referência (post ou forum)."""
+    """Lista comentários top-level de uma referência (post ou forum)."""
     return session.exec(
         select(Comentario)
         .options(joinedload(Comentario.autor).joinedload(BlogguideUser.user))
         .where(
             Comentario.referencia_id == referencia_id,
             Comentario.tipo_referencia == tipo_referencia,
+            Comentario.parent_id.is_(None),
         )
         .order_by(Comentario.data.asc())
     ).all()
 
 
+def list_respostas(session: Session, comentario_id: UUID) -> List[Comentario]:
+    """Lista respostas de um comentário específico."""
+    return session.exec(
+        select(Comentario)
+        .options(joinedload(Comentario.autor).joinedload(BlogguideUser.user))
+        .where(Comentario.parent_id == comentario_id)
+        .order_by(Comentario.data.asc())
+    ).all()
+
+
 def create_comentario(
-    session: Session, autor_id: UUID, referencia_id: UUID, tipo_referencia: str, conteudo: str
+    session: Session,
+    autor_id: UUID,
+    referencia_id: UUID,
+    tipo_referencia: str,
+    conteudo: str,
+    parent_id: UUID | None = None,
 ) -> Comentario:
     """Cria um comentário."""
     comentario = Comentario(
@@ -29,6 +45,7 @@ def create_comentario(
         autor_id=autor_id,
         referencia_id=referencia_id,
         tipo_referencia=tipo_referencia,
+        parent_id=parent_id,
     )
     session.add(comentario)
     session.commit()
@@ -44,6 +61,12 @@ def delete_comentario(session: Session, comentario_id: UUID) -> bool:
     """Deleta um comentário."""
     comentario = session.get(Comentario, comentario_id)
     if comentario:
+        respostas = session.exec(
+            select(Comentario).where(Comentario.parent_id == comentario_id)
+        ).all()
+        for resposta in respostas:
+            session.delete(resposta)
+
         session.delete(comentario)
         session.commit()
         return True
