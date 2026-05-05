@@ -21,6 +21,8 @@ router = APIRouter()
 
 
 def _to_comentario_response(c, respostas: list[ComentarioResponse] | None = None) -> ComentarioResponse:
+    autor = getattr(c, "autor", None)
+    user = getattr(autor, "user", None)
     return ComentarioResponse(
         id=c.id,
         conteudo=c.conteudo,
@@ -29,11 +31,60 @@ def _to_comentario_response(c, respostas: list[ComentarioResponse] | None = None
         tipo_referencia=c.tipo_referencia,
         parent_id=c.parent_id,
         autor=ComentarioAuthorResponse(
-            username=c.autor.user.username,
-            profile_picture=c.autor.profile_picture,
+            username=user.username if user else "Anônimo",
+            profile_picture=autor.profile_picture if autor else None,
         ),
         respostas=respostas or [],
     )
+
+
+@router.get("/{comentario_id}/respostas", response_model=List[ComentarioResponse])
+def get_respostas(comentario_id: UUID, session: SessionDep):
+    """Lista respostas de um comentário."""
+    comentario = get_comentario_by_id(session, comentario_id)
+    if not comentario:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado")
+    respostas = list_respostas(session, comentario_id)
+    return [_to_comentario_response(r) for r in respostas]
+
+
+@router.post("/{comentario_id}/resposta", response_model=ComentarioResponse, status_code=201)
+def criar_resposta(
+    comentario_id: UUID,
+    data: ComentarioCreate,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    """Cria uma resposta para um comentário existente (1 nível)."""
+    comentario_pai = get_comentario_by_id(session, comentario_id)
+    if not comentario_pai:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado")
+
+    if comentario_pai.parent_id is not None:
+        raise HTTPException(status_code=400, detail="Só é permitido responder comentários de primeiro nível")
+
+    profile = get_profile_or_404(session, UUID(user_id))
+    resposta = create_comentario(
+        session,
+        profile.id,
+        comentario_pai.referencia_id,
+        comentario_pai.tipo_referencia,
+        data.conteudo,
+        parent_id=comentario_pai.id,
+    )
+
+    if comentario_pai.autor_id != profile.id:
+        create_notificacao(
+            session,
+            destinatario_id=comentario_pai.autor_id,
+            ator_id=profile.id,
+            tipo="resposta",
+            referencia_id=resposta.id,
+            tipo_referencia=comentario_pai.tipo_referencia,
+            mensagem=f"{profile.user.username} respondeu seu comentário.",
+        )
+
+    return _to_comentario_response(resposta)
 
 
 @router.get("/{tipo_referencia}/{referencia_id}", response_model=List[ComentarioResponse])
@@ -84,55 +135,6 @@ def criar_comentario(
         )
 
     return _to_comentario_response(comentario)
-
-
-@router.get("/{comentario_id}/respostas", response_model=List[ComentarioResponse])
-def get_respostas(comentario_id: UUID, session: SessionDep):
-    """Lista respostas de um comentário."""
-    comentario = get_comentario_by_id(session, comentario_id)
-    if not comentario:
-        raise HTTPException(status_code=404, detail="Comentário não encontrado")
-    respostas = list_respostas(session, comentario_id)
-    return [_to_comentario_response(r) for r in respostas]
-
-
-@router.post("/{comentario_id}/resposta", response_model=ComentarioResponse, status_code=201)
-def criar_resposta(
-    comentario_id: UUID,
-    data: ComentarioCreate,
-    session: SessionDep,
-    user_id: str = Depends(current_user),
-):
-    """Cria uma resposta para um comentário existente (1 nível)."""
-    comentario_pai = get_comentario_by_id(session, comentario_id)
-    if not comentario_pai:
-        raise HTTPException(status_code=404, detail="Comentário não encontrado")
-
-    if comentario_pai.parent_id is not None:
-        raise HTTPException(status_code=400, detail="Só é permitido responder comentários de primeiro nível")
-
-    profile = get_profile_or_404(session, UUID(user_id))
-    resposta = create_comentario(
-        session,
-        profile.id,
-        comentario_pai.referencia_id,
-        comentario_pai.tipo_referencia,
-        data.conteudo,
-        parent_id=comentario_pai.id,
-    )
-
-    if comentario_pai.autor_id != profile.id:
-        create_notificacao(
-            session,
-            destinatario_id=comentario_pai.autor_id,
-            ator_id=profile.id,
-            tipo="resposta",
-            referencia_id=resposta.id,
-            tipo_referencia=comentario_pai.tipo_referencia,
-            mensagem=f"{profile.user.username} respondeu seu comentário.",
-        )
-
-    return _to_comentario_response(resposta)
 
 
 @router.delete("/{comentario_id}", status_code=200)
