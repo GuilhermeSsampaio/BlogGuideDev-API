@@ -90,8 +90,8 @@ def criar_resposta(
 @router.get("/{tipo_referencia}/{referencia_id}", response_model=List[ComentarioResponse])
 def get_comentarios(tipo_referencia: str, referencia_id: UUID, session: SessionDep):
     """Lista comentários de um post ou tópico do fórum (rota pública)."""
-    if tipo_referencia not in ("post", "forum", "conteudo"):
-        raise HTTPException(status_code=400, detail="tipo_referencia deve ser 'post', 'forum' ou 'conteudo'")
+    if tipo_referencia not in ("post", "forum", "conteudo", "vaga"):
+        raise HTTPException(status_code=400, detail="tipo_referencia deve ser 'post', 'forum', 'conteudo' ou 'vaga'")
     comentarios = list_comentarios(session, referencia_id, tipo_referencia)
     result = []
     for comentario in comentarios:
@@ -110,8 +110,8 @@ def criar_comentario(
     user_id: str = Depends(current_user),
 ):
     """Cria um comentário em um post ou tópico (autenticado)."""
-    if tipo_referencia not in ("post", "forum", "conteudo"):
-        raise HTTPException(status_code=400, detail="tipo_referencia deve ser 'post', 'forum' ou 'conteudo'")
+    if tipo_referencia not in ("post", "forum", "conteudo", "vaga"):
+        raise HTTPException(status_code=400, detail="tipo_referencia deve ser 'post', 'forum', 'conteudo' ou 'vaga'")
     profile = get_profile_or_404(session, UUID(user_id))
     comentario = create_comentario(session, profile.id, referencia_id, tipo_referencia, data.conteudo)
 
