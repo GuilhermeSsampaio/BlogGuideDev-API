@@ -27,21 +27,13 @@ def _generate_slug(title: str) -> str:
 def create_post(session: Session, blogguide_user_id: UUID, post_data) -> Post:
     """Cria um novo post."""
     slug = _generate_slug(post_data.title)
-    post = Post(
-        blogguide_user_id=blogguide_user_id,
-        title=post_data.title,
-        content=post_data.content,
-        subtitle=post_data.subtitle,
-        sections=post_data.sections,
-        excerpt=post_data.excerpt,
-        image_url=post_data.image_url,
-        published=post_data.published,
-        slug=slug,
-        categoryLabel=post_data.categoryLabel,
-        categoryColor=post_data.categoryColor,
-        icon=post_data.icon,
-        description=post_data.description,
-    )
+    
+    post_dict = post_data.model_dump()
+    post_dict["blogguide_user_id"] = blogguide_user_id
+    post_dict["slug"] = slug
+    
+    post = Post.model_validate(post_dict)
+    
     session.add(post)
     session.commit()
     session.refresh(post)

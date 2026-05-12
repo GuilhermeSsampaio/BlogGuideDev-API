@@ -20,6 +20,7 @@ def _to_public_response(post) -> PostPublicResponse:
         sections=post.sections,
         excerpt=post.excerpt,
         image_url=post.image_url,
+        image_reference=post.image_reference,
         categoryLabel=post.categoryLabel,
         categoryColor=post.categoryColor,
         icon=post.icon,

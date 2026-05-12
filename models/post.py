@@ -16,15 +16,16 @@ class Post(SQLModel, table=True):
     title: str = Field(index=True)
     content: str
     slug: str = Field(unique=True, index=True)
-    subtitle: Optional[str] | None
-    sections: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    description: Optional[str] | None
-    icon: Optional[str] | None
-    categoryLabel: Optional[str] | None
-    categoryColor: Optional[str] | None
-    category: Optional[str] | None
-    excerpt: Optional[str] | None
-    image_url: Optional[str] | None = None
+    subtitle: Optional[str] = Field(default=None)
+    sections: Optional[list] = Field(default=None, sa_column=Column(JSON))
+    description: Optional[str] = Field(default=None)
+    icon: Optional[str] = Field(default=None)
+    categoryLabel: Optional[str] = Field(default=None)
+    categoryColor: Optional[str] = Field(default=None)
+    category: Optional[str] = Field(default=None)
+    excerpt: Optional[str] = Field(default=None)
+    image_url: Optional[str] = Field(default=None)
+    image_reference: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     published: bool = Field(default=False)

@@ -254,6 +254,8 @@ def update_user_post(
         post.excerpt = post_data.excerpt
     if post_data.image_url is not None:
         post.image_url = post_data.image_url
+    if post_data.image_reference is not None:
+        post.image_reference = post_data.image_reference
     if post_data.published is not None:
         post.published = post_data.published
     if post_data.categoryLabel is not None:

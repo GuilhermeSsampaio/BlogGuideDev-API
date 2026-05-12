@@ -11,6 +11,7 @@ class PostRegister(BaseModel):
     sections: Optional[List[dict]] = None
     excerpt: Optional[str] = None
     image_url: Optional[str] = None
+    image_reference: Optional[str] = None
     published: Optional[bool] = False
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
@@ -25,6 +26,7 @@ class PostUpdate(BaseModel):
     sections: Optional[List[dict]] = None
     excerpt: Optional[str] = None
     image_url: Optional[str] = None
+    image_reference: Optional[str] = None
     published: Optional[bool] = None
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
@@ -42,6 +44,7 @@ class PostResponse(BaseModel):
     sections: Optional[List[dict]] = None
     excerpt: Optional[str] = None
     image_url: Optional[str] = None
+    image_reference: Optional[str] = None
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
     icon: Optional[str] = None
@@ -69,6 +72,7 @@ class PostPublicResponse(BaseModel):
     sections: Optional[List[dict]] = None
     excerpt: Optional[str] = None
     image_url: Optional[str] = None
+    image_reference: Optional[str] = None
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
     icon: Optional[str] = None
