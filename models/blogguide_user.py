@@ -27,6 +27,7 @@ class BlogguideUser(SQLModel, table=True):
     github: Optional[str] | None = None
     linkedin: Optional[str] | None = None
     verified: Optional[bool] = Field(default=False)
+    is_public: Optional[bool] = Field(default=False)
     posts: list["Post"] = Relationship(back_populates="blogguide_user")
 
     user: "User" = Relationship(sa_relationship_kwargs={"uselist": False})

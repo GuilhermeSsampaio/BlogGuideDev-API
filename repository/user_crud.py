@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlmodel import select, Session, func
 from sqlalchemy.orm import joinedload
 
+from auth.models.user import User
 from models.blogguide_user import BlogguideUser
 from models.curtida import Curtida
 from models.comentario import Comentario
@@ -11,6 +12,24 @@ from models.forum import Forum
 
 def list_blogguide_users(session: Session) -> List[BlogguideUser]:
     return session.exec(select(BlogguideUser).options(joinedload(BlogguideUser.user))).unique().all()
+
+
+def list_public_users(session: Session) -> List[BlogguideUser]:
+    return session.exec(
+        select(BlogguideUser)
+        .options(joinedload(BlogguideUser.user))
+        .where(BlogguideUser.is_public == True)
+    ).unique().all()
+
+
+def get_public_user_by_username(session: Session, username: str) -> Optional[BlogguideUser]:
+    return session.exec(
+        select(BlogguideUser)
+        .join(User, BlogguideUser.user_id == User.id)
+        .options(joinedload(BlogguideUser.user))
+        .where(BlogguideUser.is_public == True)
+        .where(User.username == username)
+    ).first()
 
 
 def get_blogguide_user_by_user_id(

@@ -24,8 +24,10 @@ from services.user_service import (
     edit_profile,
     edit_profile_with_avatar,
     get_my_profile,
+    get_public_profile,
     get_user_stats,
     list_all_blogguide_users,
+    list_public_profiles,
     register_blogguide_user,
     save_post_for_user,
     list_user_posts,
@@ -68,6 +70,16 @@ def get_blogguide_users(session: SessionDep):
     return list_all_blogguide_users(session)
 
 
+@router.get("/public", response_model=List[BlogguideUserResponse])
+def get_public_users(session: SessionDep):
+    return list_public_profiles(session)
+
+
+@router.get("/public/{username}", response_model=BlogguideUserResponse)
+def get_public_user_profile(username: str, session: SessionDep):
+    return get_public_profile(session, username)
+
+
 @router.get("/me", response_model=BlogguideUserResponse)
 def me(session: SessionDep, user_id: str = Depends(current_user)):
     return get_my_profile(session, UUID(user_id))
@@ -95,6 +107,7 @@ async def update_profile_with_avatar(
     bio: str | None = Form(None),
     github: str | None = Form(None),
     linkedin: str | None = Form(None),
+    is_public: bool | None = Form(None),
     avatar: UploadFile | None = File(None),
 ):
     # Endpoint dedicado a multipart/form-data para avatar.
@@ -105,6 +118,7 @@ async def update_profile_with_avatar(
         bio,
         github,
         linkedin,
+        is_public,
         avatar,
     )
 

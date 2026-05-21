@@ -36,26 +36,8 @@ def register_blogguide_user(
     session: Session, user_data: UserRegister
 ) -> BlogguideUserResponse:
     """Cria User base + AuthProvider + blogguideUser."""
-    try:
-        user_base = User(username=user_data.username, email=user_data.email)
-        session.add(user_base)
-        session.commit()
-        session.refresh(user_base)
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email ou username já cadastrado",
-        )
 
-    auth_provider = AuthProvider(
-        user_id=user_base.id,
-        provider="password",
-        password_hash=hash_password(user_data.password),
-    )
-    session.add(auth_provider)
-    session.commit()
-
+    # ── Validação de CNPJ (antes de qualquer commit) ──
     if user_data.tipo_perfil == "recrutador":
         if not user_data.cnpj:
             raise HTTPException(status_code=400, detail="CNPJ é obrigatório para recrutadores")
@@ -79,6 +61,27 @@ def register_blogguide_user(
                     )
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Erro ao validar CNPJ com a Brasil API")
+
+    # ── Criação do User base ──
+    try:
+        user_base = User(username=user_data.username, email=user_data.email)
+        session.add(user_base)
+        session.commit()
+        session.refresh(user_base)
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email ou username já cadastrado",
+        )
+
+    auth_provider = AuthProvider(
+        user_id=user_base.id,
+        provider="password",
+        password_hash=hash_password(user_data.password),
+    )
+    session.add(auth_provider)
+    session.commit()
 
     profile = create_blogguide_user(
         session,
@@ -110,6 +113,21 @@ def list_all_blogguide_users(session: Session) -> list[BlogguideUserUpdate]:
     return [to_blogguide_response(p) for p in profiles]
 
 
+def list_public_profiles(session: Session) -> list[BlogguideUserUpdate]:
+    profiles = list_public_users(session)
+    return [to_blogguide_response(p) for p in profiles]
+
+
+def get_public_profile(session: Session, username: str) -> BlogguideUserUpdate:
+    profile = get_public_user_by_username(session, username)
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Perfil não encontrado ou não é público",
+        )
+    return to_blogguide_response(profile)
+
+
 def get_my_profile(session: Session, user_uuid: UUID) -> BlogguideUserUpdate:
     """Busca perfil do usuário autenticado. Cria se não existir (OAuth)."""
     profile = get_blogguide_user_by_user_id(session, user_uuid)
@@ -138,6 +156,8 @@ def edit_profile(
         profile.linkedin = updates.linkedin
     if updates.profile_picture is not None:
         profile.profile_picture = updates.profile_picture
+    if updates.is_public is not None:
+        profile.is_public = updates.is_public
 
     profile = update_blogguide_user(session, profile)
     return to_blogguide_response(profile)
@@ -150,6 +170,7 @@ async def edit_profile_with_avatar(
     bio: str | None,
     github: str | None,
     linkedin: str | None,
+    is_public: bool | None,
     avatar: UploadFile | None,
 ) -> BlogguideUserUpdate:
     """Atualiza dados do perfil e salva o avatar enviado via multipart."""
@@ -171,6 +192,8 @@ async def edit_profile_with_avatar(
         profile.github = github
     if linkedin is not None:
         profile.linkedin = linkedin
+    if is_public is not None:
+        profile.is_public = is_public
 
     if avatar:
         file_ext = os.path.splitext(avatar.filename or "")[1].lower()

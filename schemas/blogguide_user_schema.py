@@ -11,6 +11,7 @@ class BlogguideUserUpdate(BaseModel):
     cnpj: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
+    is_public: Optional[bool] = None
 
 
 class RoleUpdate(BaseModel):
@@ -31,6 +32,7 @@ class BlogguideUserResponse(BaseModel):
     github: Optional[str] = None
     linkedin: Optional[str] = None
     verified: bool
+    is_public: bool
 
     model_config = ConfigDict(from_attributes=True)
 

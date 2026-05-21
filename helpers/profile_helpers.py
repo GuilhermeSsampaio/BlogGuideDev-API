@@ -32,4 +32,5 @@ def to_blogguide_response(profile: BlogguideUser) -> BlogguideUserResponse:
         github=profile.github,
         linkedin=profile.linkedin,
         verified=profile.verified,
+        is_public=profile.is_public or False,
     )

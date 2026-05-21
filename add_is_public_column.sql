@@ -1,0 +1,1 @@
+ALTER TABLE blogguideuser ADD COLUMN is_public BOOLEAN DEFAULT FALSE;
