@@ -9,10 +9,12 @@ from repository.crud import (
     list_forum_topics,
     get_forum_topic_by_id,
     create_forum_topic,
+    update_forum_topic,
     delete_forum_topic,
 )
 from schemas.forum_schema import (
     ForumCreate,
+    ForumUpdate,
     ForumResponse,
     ForumAuthorResponse,
 )
@@ -29,6 +31,7 @@ def _to_forum_response(topic) -> ForumResponse:
         tipo=topic.tipo,
         imagem_url=topic.imagem_url,
         data_criacao=topic.data_criacao,
+        data_atualizacao=topic.data_atualizacao,
         autor=ForumAuthorResponse(
             username=topic.autor.user.username,
             profile_picture=topic.autor.profile_picture,
@@ -65,6 +68,33 @@ def create_topic(
     profile = get_profile_or_404(session, UUID(user_id))
     topic = create_forum_topic(session, profile.id, topic_data)
     return _to_forum_response(topic)
+
+
+@router.put("/{topic_id}", response_model=ForumResponse)
+def update_topic(
+    topic_id: UUID,
+    topic_data: ForumUpdate,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    """Atualiza um tópico no fórum (somente o autor)."""
+    profile = get_profile_or_404(session, UUID(user_id))
+    topic = get_forum_topic_by_id(session, topic_id)
+
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tópico não encontrado",
+        )
+
+    if topic.autor_id != profile.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para atualizar este tópico",
+        )
+
+    updated_topic = update_forum_topic(session, topic_id, topic_data)
+    return _to_forum_response(updated_topic)
 
 
 @router.delete("/{topic_id}", status_code=status.HTTP_200_OK)

@@ -15,6 +15,7 @@ class Forum(SQLModel, table=True):
     tipo: Optional[str] = None
     imagem_url: Optional[str] = None
     data_criacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    data_atualizacao: Optional[datetime] = None
     autor_id: UUID = Field(foreign_key="blogguideuser.id", index=True)
 
     autor: "BlogguideUser" = Relationship()

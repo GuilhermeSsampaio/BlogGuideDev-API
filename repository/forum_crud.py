@@ -44,6 +44,29 @@ def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
     ).unique().first()
 
 
+def update_forum_topic(session: Session, topic_id: UUID, topic_data) -> Optional[Forum]:
+    """Atualiza um tópico no fórum."""
+    topic = get_forum_topic_by_id(session, topic_id)
+    if not topic:
+        return None
+    
+    update_data = topic_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(topic, key, value)
+    
+    from datetime import datetime, timezone
+    topic.data_atualizacao = datetime.now(timezone.utc)
+    
+    session.add(topic)
+    session.commit()
+    session.refresh(topic)
+    return session.exec(
+        select(Forum)
+        .options(joinedload(Forum.autor).joinedload(BlogguideUser.user))
+        .where(Forum.id == topic.id)
+    ).unique().first()
+
+
 def delete_forum_topic(session: Session, topic_id: UUID) -> bool:
     """Deleta um tópico do fórum."""
     topic = get_forum_topic_by_id(session, topic_id)

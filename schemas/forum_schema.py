@@ -32,6 +32,7 @@ class ForumResponse(BaseModel):
     tipo: Optional[str] = None
     imagem_url: Optional[str] = None
     data_criacao: datetime
+    data_atualizacao: Optional[datetime] = None
     autor: ForumAuthorResponse
 
     model_config = ConfigDict(from_attributes=True)
