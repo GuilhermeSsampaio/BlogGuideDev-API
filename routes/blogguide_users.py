@@ -103,6 +103,7 @@ def update_profile(
 async def update_profile_with_avatar(
     session: SessionDep,
     user_id: str = Depends(current_user),
+    username: str | None = Form(None),
     nome_completo: str | None = Form(None),
     bio: str | None = Form(None),
     github: str | None = Form(None),
@@ -114,6 +115,7 @@ async def update_profile_with_avatar(
     return await edit_profile_with_avatar(
         session,
         UUID(user_id),
+        username,
         nome_completo,
         bio,
         github,

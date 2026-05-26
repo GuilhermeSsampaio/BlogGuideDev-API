@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 import os
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlmodel import Session, select
 import httpx
 from validate_docbr import CNPJ
 
@@ -144,6 +144,18 @@ def edit_profile(
     """Atualiza o perfil do usuário autenticado."""
     profile = get_profile_or_404(session, user_uuid)
 
+    if updates.username is not None and updates.username != profile.user.username:
+        existing = session.exec(
+            select(User).where(User.username == updates.username)
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username já está em uso",
+            )
+        profile.user.username = updates.username
+        session.add(profile.user)
+
     if updates.nome_completo is not None:
         profile.nome_completo = updates.nome_completo
     if updates.bio is not None:
@@ -166,6 +178,7 @@ def edit_profile(
 async def edit_profile_with_avatar(
     session: Session,
     user_uuid: UUID,
+    username: str | None,
     nome_completo: str | None,
     bio: str | None,
     github: str | None,
@@ -179,10 +192,23 @@ async def edit_profile_with_avatar(
     def normalize_value(value: str | None) -> str | None:
         return value if value not in (None, "") else None
 
+    username = normalize_value(username)
     nome_completo = normalize_value(nome_completo)
     bio = normalize_value(bio)
     github = normalize_value(github)
     linkedin = normalize_value(linkedin)
+
+    if username is not None and username != profile.user.username:
+        existing = session.exec(
+            select(User).where(User.username == username)
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username já está em uso",
+            )
+        profile.user.username = username
+        session.add(profile.user)
 
     if nome_completo is not None:
         profile.nome_completo = nome_completo

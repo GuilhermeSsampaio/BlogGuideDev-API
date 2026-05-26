@@ -4,6 +4,7 @@ from typing import Optional
 
 
 class BlogguideUserUpdate(BaseModel):
+    username: Optional[str] = None
     nome_completo: Optional[str] = None
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
