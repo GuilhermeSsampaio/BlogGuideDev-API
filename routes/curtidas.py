@@ -51,8 +51,8 @@ def toggle_like(
                 destinatario_id=dono_referencia_id,
                 ator_id=profile.id,
                 tipo="curtida",
-                referencia_id=referencia_id,
-                tipo_referencia=tipo_referencia,
+                referencia_id=comentario.referencia_id if tipo_referencia == "comentario" else referencia_id,
+                tipo_referencia=comentario.tipo_referencia if tipo_referencia == "comentario" else tipo_referencia,
                 mensagem=f"{profile.user.username} curtiu seu conteúdo.",
             )
 

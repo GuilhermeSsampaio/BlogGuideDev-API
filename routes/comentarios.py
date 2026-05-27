@@ -79,7 +79,7 @@ def criar_resposta(
             destinatario_id=comentario_pai.autor_id,
             ator_id=profile.id,
             tipo="resposta",
-            referencia_id=resposta.id,
+            referencia_id=comentario_pai.referencia_id,
             tipo_referencia=comentario_pai.tipo_referencia,
             mensagem=f"{profile.user.username} respondeu seu comentário.",
         )
@@ -129,7 +129,7 @@ def criar_comentario(
             destinatario_id=dono_referencia_id,
             ator_id=profile.id,
             tipo="comentario",
-            referencia_id=comentario.id,
+            referencia_id=referencia_id,
             tipo_referencia=tipo_referencia,
             mensagem=f"{profile.user.username} comentou no seu conteúdo.",
         )

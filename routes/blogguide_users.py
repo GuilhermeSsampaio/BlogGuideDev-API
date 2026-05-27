@@ -31,6 +31,7 @@ from services.user_service import (
     register_blogguide_user,
     save_post_for_user,
     list_user_posts,
+    get_user_post_by_id,
     update_user_post,
     delete_user_post,
 )
@@ -38,6 +39,7 @@ from repository.crud import (
     list_notificacoes_usuario,
     count_unread_notificacoes,
     mark_notificacao_as_read,
+    mark_all_notificacoes_as_read,
 )
 from schemas.notificacao_schema import (
     NotificacaoListResponse,
@@ -139,6 +141,16 @@ def get_notificacoes(
     )
 
 
+@router.put("/notificacoes/read-all", response_model=dict)
+def read_all_notificacoes(
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    profile = get_my_profile(session, UUID(user_id))
+    mark_all_notificacoes_as_read(session, profile.id)
+    return {"message": "Todas as notificações marcadas como lidas."}
+
+
 @router.put("/notificacoes/{notificacao_id}/read", response_model=NotificacaoReadResponse)
 def read_notificacao(
     notificacao_id: UUID,
@@ -170,6 +182,15 @@ def save_post(
 @router.get("/my_posts", response_model=List[PostResponse])
 def get_my_posts(session: SessionDep, user_id: str = Depends(current_user)):
     return list_user_posts(session, UUID(user_id))
+
+
+@router.get("/my_post/{post_id}", response_model=PostResponse)
+def get_my_post(
+    session: SessionDep,
+    post_id: str,
+    user_id: str = Depends(require_role(TipoPerfil.admin)),
+):
+    return get_user_post_by_id(session, UUID(user_id), UUID(post_id))
 
 
 @router.put("/update_post/{post_id}", response_model=PostResponse)
