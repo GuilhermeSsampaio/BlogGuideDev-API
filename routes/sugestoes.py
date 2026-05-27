@@ -1,4 +1,6 @@
 from uuid import UUID
+import threading
+import logging
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 
@@ -10,6 +12,9 @@ from models.sugestao import Sugestao
 from repository.crud import create_sugestao, list_sugestoes, list_sugestoes_by_user
 from repository.crud import get_blogguide_user_by_user_id
 from schemas.sugestao_schema import SugestaoCreate, SugestaoResponse
+from services.email_service import send_feedback_email
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -26,14 +31,20 @@ def criar_sugestao(
     # JWT sub contém User.id (tabela auth), mas Sugestao.user_id faz FK
     # para blogguideuser.id. Precisamos resolver o perfil BlogguideUser.
     profile_id: UUID | None = None
+    user_name: str | None = None
     if authorization and authorization.lower().startswith("bearer "):
-        token = authorization.split(" ", 1)[1]
-        payload = decode_token(token)
-        if payload and payload.get("sub"):
-            auth_user_id = UUID(payload["sub"])
-            profile = get_blogguide_user_by_user_id(session, auth_user_id)
-            if profile:
-                profile_id = profile.id
+        try:
+            token = authorization.split(" ", 1)[1]
+            payload = decode_token(token)
+            if payload and payload.get("sub"):
+                auth_user_id = UUID(payload["sub"])
+                profile = get_blogguide_user_by_user_id(session, auth_user_id)
+                if profile:
+                    profile_id = profile.id
+                    user_name = getattr(profile, "nome", None) or getattr(profile, "name", None)
+        except Exception:
+            # Token inválido/expirado – segue como anônimo
+            pass
 
     sugestao = Sugestao(
         user_id=profile_id,
@@ -44,6 +55,21 @@ def criar_sugestao(
         canal_contato=data.canal_contato,
     )
     created = create_sugestao(session, sugestao)
+
+    # Enviar e-mail de notificação em background (não atrasa a resposta)
+    threading.Thread(
+        target=send_feedback_email,
+        kwargs={
+            "tipo": data.tipo,
+            "titulo": data.titulo,
+            "descricao": data.descricao,
+            "canal_contato": data.canal_contato,
+            "email_contato": data.email_contato,
+            "user_name": user_name,
+        },
+        daemon=True,
+    ).start()
+
     return SugestaoResponse.model_validate(created)
 
 

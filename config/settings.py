@@ -25,3 +25,11 @@ UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
 PROFILE_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "avatars")
 MAX_AVATAR_SIZE_MB = int(os.getenv("MAX_AVATAR_SIZE_MB", "5"))
 ALLOWED_AVATAR_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+
+# ── SMTP (envio de e-mail de feedback) ──────────────────────────────
+SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+FEEDBACK_RECIPIENT_EMAIL = os.getenv(
+    "FEEDBACK_RECIPIENT_EMAIL",
+    "guilhermesampaio.dev.contato@gmail.com",
+)
