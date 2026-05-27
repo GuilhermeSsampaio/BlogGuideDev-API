@@ -87,7 +87,7 @@ def update_topic(
             detail="Tópico não encontrado",
         )
 
-    if topic.autor_id != profile.id:
+    if topic.autor_id != profile.id and profile.tipo_perfil != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Você não tem permissão para atualizar este tópico",

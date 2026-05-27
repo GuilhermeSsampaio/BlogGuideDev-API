@@ -47,6 +47,7 @@ class PostResponse(BaseModel):
     image_reference: Optional[str] = None
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
+    category: Optional[str] = None
     icon: Optional[str] = None
     description: Optional[str] = None
     created_at: datetime
@@ -75,6 +76,7 @@ class PostPublicResponse(BaseModel):
     image_reference: Optional[str] = None
     categoryLabel: Optional[str] = None
     categoryColor: Optional[str] = None
+    category: Optional[str] = None
     icon: Optional[str] = None
     description: Optional[str] = None
     created_at: datetime

@@ -1,7 +1,9 @@
 from uuid import UUID, uuid4
 import os
+from datetime import datetime, timezone
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import Session, select
 import httpx
 from validate_docbr import CNPJ
@@ -272,6 +274,29 @@ def list_user_posts(session: Session, user_uuid: UUID) -> list[PostResponse]:
     return [PostResponse.model_validate(post) for post in posts]
 
 
+def get_user_post_by_id(
+    session: Session, user_uuid: UUID, post_id: UUID
+) -> PostResponse:
+    """Busca um post específico do usuário autenticado (publicado ou rascunho)."""
+    profile = get_profile_or_404(session, user_uuid)
+    post = get_post_by_id(session, post_id)
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post não encontrado",
+        )
+
+    if post.blogguide_user_id != profile.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para acessar este post",
+        )
+
+    return PostResponse.model_validate(post)
+
+
+
 def update_user_post(
     session: Session, user_uuid: UUID, post_id: UUID, post_data: PostUpdate
 ) -> PostResponse:
@@ -298,7 +323,9 @@ def update_user_post(
     if post_data.subtitle is not None:
         post.subtitle = post_data.subtitle
     if post_data.sections is not None:
+        # Substitui completamente as sections antigas pelas novas
         post.sections = post_data.sections
+        flag_modified(post, "sections")
     if post_data.excerpt is not None:
         post.excerpt = post_data.excerpt
     if post_data.image_url is not None:
@@ -315,6 +342,9 @@ def update_user_post(
         post.icon = post_data.icon
     if post_data.description is not None:
         post.description = post_data.description
+
+    # Atualiza timestamp de modificação
+    post.updated_at = datetime.now(timezone.utc)
 
     post = update_post(session, post)
     return PostResponse.model_validate(post)

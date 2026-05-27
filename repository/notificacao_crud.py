@@ -56,6 +56,19 @@ def mark_notificacao_as_read(session: Session, notificacao_id: UUID, destinatari
     return notificacao
 
 
+def mark_all_notificacoes_as_read(session: Session, destinatario_id: UUID) -> None:
+    notificacoes = session.exec(
+        select(Notificacao).where(
+            Notificacao.destinatario_id == destinatario_id,
+            Notificacao.lida == False,
+        )
+    ).all()
+    for n in notificacoes:
+        n.lida = True
+        session.add(n)
+    session.commit()
+
+
 def count_unread_notificacoes(session: Session, destinatario_id: UUID) -> int:
     notificacoes = session.exec(
         select(Notificacao.id).where(
