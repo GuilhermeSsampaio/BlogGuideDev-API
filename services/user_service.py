@@ -15,6 +15,7 @@ from auth.models.user import User
 from auth.schemas.auth_schema import UserRegister
 from auth.security.hashing import hash_password
 from auth.services.auth_service import login_user
+from auth.repository.crud import get_user_by_username, get_user_by_email
 
 from helpers.profile_helpers import (
     get_profile_or_404,
@@ -33,6 +34,42 @@ from schemas.post_schema import (
     PostRegister, PostResponse, PostUpdate
 )
 from services.push_service import build_push_payload, queue_push_broadcast
+
+
+def check_username_availability(session: Session, username: str, exclude_username: str | None = None) -> dict:
+    """Verifica se o username está disponível.
+    
+    Args:
+        session: Sessão do banco de dados.
+        username: Username a verificar.
+        exclude_username: Username atual do usuário (para edição de perfil).
+    
+    Returns:
+        dict com 'available' (bool) e 'message' (str).
+    """
+    username = username.strip().lower()
+
+    if len(username) < 3:
+        return {"available": False, "message": "Username deve ter no mínimo 3 caracteres"}
+    if len(username) > 30:
+        return {"available": False, "message": "Username deve ter no máximo 30 caracteres"}
+
+    import re
+    if not re.match(r"^[a-z0-9._-]+$", username):
+        return {
+            "available": False,
+            "message": "Username deve conter apenas letras, números, '.', '_' ou '-' (sem espaços)",
+        }
+
+    # Se o username é o mesmo do usuário atual, está "disponível" para ele
+    if exclude_username and username == exclude_username.strip().lower():
+        return {"available": True, "message": "Username atual mantido"}
+
+    existing = get_user_by_username(session, username)
+    if existing:
+        return {"available": False, "message": "Username já está em uso"}
+
+    return {"available": True, "message": "Username disponível"}
 
 
 def register_blogguide_user(
@@ -65,9 +102,24 @@ def register_blogguide_user(
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Erro ao validar CNPJ com a Brasil API")
 
+    # ── Pré-verificação de unicidade (mensagens específicas) ──
+    username_lower = user_data.username  # já é lowercase pelo validator do Pydantic
+
+    if get_user_by_username(session, username_lower):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username já está em uso",
+        )
+
+    if get_user_by_email(session, user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email já cadastrado",
+        )
+
     # ── Criação do User base ──
     try:
-        user_base = User(username=user_data.username, email=user_data.email)
+        user_base = User(username=username_lower, email=user_data.email)
         session.add(user_base)
         session.commit()
         session.refresh(user_base)
@@ -148,15 +200,14 @@ def edit_profile(
     profile = get_profile_or_404(session, user_uuid)
 
     if updates.username is not None and updates.username != profile.user.username:
-        existing = session.exec(
-            select(User).where(User.username == updates.username)
-        ).first()
+        username_lower = updates.username  # já é lowercase pelo validator do Pydantic
+        existing = get_user_by_username(session, username_lower)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Username já está em uso",
             )
-        profile.user.username = updates.username
+        profile.user.username = username_lower
         session.add(profile.user)
 
     if updates.nome_completo is not None:
@@ -202,15 +253,14 @@ async def edit_profile_with_avatar(
     linkedin = normalize_value(linkedin)
 
     if username is not None and username != profile.user.username:
-        existing = session.exec(
-            select(User).where(User.username == username)
-        ).first()
+        username_lower = username.strip().lower()
+        existing = get_user_by_username(session, username_lower)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Username já está em uso",
             )
-        profile.user.username = username
+        profile.user.username = username_lower
         session.add(profile.user)
 
     if nome_completo is not None:
