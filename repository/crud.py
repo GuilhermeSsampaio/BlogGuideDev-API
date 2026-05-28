@@ -11,5 +11,6 @@ from repository.vaga_crud import *       # noqa: F401,F403
 from repository.search_crud import *     # noqa: F401,F403
 from repository.conteudo_crud import *   # noqa: F401,F403
 from repository.notificacao_crud import * # noqa: F401,F403
+from repository.push_subscription_crud import * # noqa: F401,F403
 from repository.sugestao_crud import * # noqa: F401,F403
 

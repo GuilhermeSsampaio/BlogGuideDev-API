@@ -32,6 +32,7 @@ from schemas.blogguide_user_schema import (
 from schemas.post_schema import (
     PostRegister, PostResponse, PostUpdate
 )
+from services.push_service import build_push_payload, queue_push_broadcast
 
 
 def register_blogguide_user(
@@ -264,6 +265,15 @@ def save_post_for_user(
     """Cria um novo post para o usuário autenticado."""
     profile = get_profile_or_404(session, user_uuid)
     post = create_post(session, profile.id, post_data)
+    if post.published:
+        post_slug = post.slug or str(post.id)
+        payload = build_push_payload(
+            title="Novo conteúdo publicado",
+            body=post.title,
+            url=f"/conteudo/{post_slug}",
+            tag=f"post-{post.id}",
+        )
+        queue_push_broadcast(payload, exclude_user_id=profile.id)
     return PostResponse.model_validate(post)
 
 
@@ -316,6 +326,8 @@ def update_user_post(
             detail="Você não tem permissão para atualizar este post",
         )
 
+    was_published = post.published
+
     if post_data.title is not None:
         post.title = post_data.title
     if post_data.content is not None:
@@ -347,6 +359,15 @@ def update_user_post(
     post.updated_at = datetime.now(timezone.utc)
 
     post = update_post(session, post)
+    if post.published and not was_published:
+        post_slug = post.slug or str(post.id)
+        payload = build_push_payload(
+            title="Novo conteúdo publicado",
+            body=post.title,
+            url=f"/conteudo/{post_slug}",
+            tag=f"post-{post.id}",
+        )
+        queue_push_broadcast(payload, exclude_user_id=profile.id)
     return PostResponse.model_validate(post)
 
 

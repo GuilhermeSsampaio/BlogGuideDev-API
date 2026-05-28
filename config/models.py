@@ -14,6 +14,7 @@ def setup_models():
     from models.forum import Forum  # noqa: F401
     from models.comentario import Comentario  # noqa: F401
     from models.notificacao import Notificacao  # noqa: F401
+    from models.push_subscription import PushSubscription  # noqa: F401
     from models.curtida import Curtida  # noqa: F401
     from models.vaga import Vaga  # noqa: F401
     from models.conteudo import Conteudo  # noqa: F401

@@ -20,6 +20,10 @@ GOOGLE_REDIRECT_URI = os.getenv(
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 HTTPS_ONLY = os.getenv("HTTPS_ONLY", "false").strip().lower() == "true"
 
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:contato@blogguide.dev")
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
 PROFILE_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "avatars")

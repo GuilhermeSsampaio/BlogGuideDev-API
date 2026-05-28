@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import Depends, APIRouter, UploadFile, File, Form
+from fastapi import Depends, APIRouter, UploadFile, File, Form, Header, HTTPException
 from uuid import UUID
 
 from auth.schemas.auth_schema import UserLogin, UserRegister
@@ -7,6 +7,8 @@ from auth.schemas.token_schema import TokenResponse
 from auth.security.dependencies import current_user, require_role
 from models.blogguide_user import TipoPerfil
 from config.db import SessionDep
+from config.settings import VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, VAPID_SUBJECT
+from helpers.profile_helpers import get_profile_or_404
 
 from schemas.blogguide_user_schema import (
     BlogguideUserResponse,
@@ -40,11 +42,19 @@ from repository.crud import (
     count_unread_notificacoes,
     mark_notificacao_as_read,
     mark_all_notificacoes_as_read,
+    remove_push_subscription,
+    upsert_push_subscription,
 )
 from schemas.notificacao_schema import (
     NotificacaoListResponse,
     NotificacaoReadResponse,
     NotificacaoResponse,
+)
+from schemas.push_schema import (
+    PushPublicKeyResponse,
+    PushSubscribeResponse,
+    PushSubscriptionIn,
+    PushUnsubscribeRequest,
 )
 
 router = APIRouter()
@@ -165,6 +175,47 @@ def read_notificacao(
         success=True,
         notificacao=NotificacaoResponse.model_validate(notificacao),
     )
+
+
+@router.get("/push/public-key", response_model=PushPublicKeyResponse)
+def get_push_public_key(user_id: str = Depends(current_user)):
+    if not (VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY and VAPID_SUBJECT):
+        raise HTTPException(status_code=503, detail="Notificacoes push nao configuradas")
+    return PushPublicKeyResponse(public_key=VAPID_PUBLIC_KEY)
+
+
+@router.post("/push/subscribe", response_model=PushSubscribeResponse)
+def subscribe_push(
+    payload: PushSubscriptionIn,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+    user_agent: str | None = Header(default=None),
+):
+    if not (VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY and VAPID_SUBJECT):
+        raise HTTPException(status_code=503, detail="Notificacoes push nao configuradas")
+
+    profile = get_profile_or_404(session, UUID(user_id))
+    upsert_push_subscription(
+        session,
+        user_id=profile.id,
+        endpoint=payload.endpoint,
+        p256dh=payload.keys.p256dh,
+        auth=payload.keys.auth,
+        expiration_time=payload.expiration_time,
+        user_agent=user_agent,
+    )
+    return PushSubscribeResponse(success=True)
+
+
+@router.post("/push/unsubscribe", response_model=PushSubscribeResponse)
+def unsubscribe_push(
+    payload: PushUnsubscribeRequest,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    profile = get_profile_or_404(session, UUID(user_id))
+    removed = remove_push_subscription(session, payload.endpoint, profile.id)
+    return PushSubscribeResponse(success=removed)
 
 
 # ── Posts ────────────────────────────────────────────────

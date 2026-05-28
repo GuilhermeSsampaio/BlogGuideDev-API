@@ -15,6 +15,11 @@ from repository.crud import (
     get_forum_topic_by_id,
     get_comentario_by_id,
 )
+from services.push_service import (
+    build_push_payload,
+    queue_push_to_user,
+    resolve_reference_path,
+)
 from schemas.comentario_schema import ComentarioCreate, ComentarioResponse, ComentarioAuthorResponse
 
 router = APIRouter()
@@ -83,6 +88,16 @@ def criar_resposta(
             tipo_referencia=comentario_pai.tipo_referencia,
             mensagem=f"{profile.user.username} respondeu seu comentário.",
         )
+        payload = build_push_payload(
+            title="BlogGuide",
+            body=f"{profile.user.username} respondeu seu comentário.",
+            url=resolve_reference_path(
+                comentario_pai.tipo_referencia,
+                str(comentario_pai.referencia_id),
+            ),
+            tag=f"resposta-{comentario_pai.id}",
+        )
+        queue_push_to_user(comentario_pai.autor_id, payload)
 
     return _to_comentario_response(resposta)
 
@@ -133,6 +148,13 @@ def criar_comentario(
             tipo_referencia=tipo_referencia,
             mensagem=f"{profile.user.username} comentou no seu conteúdo.",
         )
+        payload = build_push_payload(
+            title="BlogGuide",
+            body=f"{profile.user.username} comentou no seu conteúdo.",
+            url=resolve_reference_path(tipo_referencia, str(referencia_id)),
+            tag=f"comentario-{referencia_id}",
+        )
+        queue_push_to_user(dono_referencia_id, payload)
 
     return _to_comentario_response(comentario)
 

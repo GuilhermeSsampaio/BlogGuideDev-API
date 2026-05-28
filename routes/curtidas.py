@@ -13,6 +13,11 @@ from repository.crud import (
     get_comentario_by_id,
     create_notificacao,
 )
+from services.push_service import (
+    build_push_payload,
+    queue_push_to_user,
+    resolve_reference_path,
+)
 from schemas.curtida_schema import CurtidaToggleResponse, CurtidaCountResponse
 
 router = APIRouter()
@@ -35,6 +40,7 @@ def toggle_like(
 
     if curtido:
         dono_referencia_id = None
+        comentario = None
         if tipo_referencia == "post":
             post = get_post_by_id(session, referencia_id)
             dono_referencia_id = post.blogguide_user_id if post else None
@@ -55,6 +61,19 @@ def toggle_like(
                 tipo_referencia=comentario.tipo_referencia if tipo_referencia == "comentario" else tipo_referencia,
                 mensagem=f"{profile.user.username} curtiu seu conteúdo.",
             )
+            resolved_ref_id = (
+                comentario.referencia_id if tipo_referencia == "comentario" and comentario else referencia_id
+            )
+            resolved_tipo = (
+                comentario.tipo_referencia if tipo_referencia == "comentario" and comentario else tipo_referencia
+            )
+            payload = build_push_payload(
+                title="BlogGuide",
+                body=f"{profile.user.username} curtiu seu conteúdo.",
+                url=resolve_reference_path(resolved_tipo, str(resolved_ref_id)),
+                tag=f"curtida-{resolved_ref_id}",
+            )
+            queue_push_to_user(dono_referencia_id, payload)
 
     total = count_curtidas(session, referencia_id, tipo_referencia)
     return CurtidaToggleResponse(curtido=curtido, total=total)
