@@ -23,6 +23,7 @@ from schemas.post_schema import (
 
 from services.user_service import (
     authenticate_blogguide_user,
+    check_username_availability,
     edit_profile,
     edit_profile_with_avatar,
     get_my_profile,
@@ -85,6 +86,12 @@ def get_blogguide_users(session: SessionDep):
 @router.get("/public", response_model=List[BlogguideUserResponse])
 def get_public_users(session: SessionDep):
     return list_public_profiles(session)
+
+
+@router.get("/check-username/{username}")
+def check_username(username: str, session: SessionDep):
+    """Verifica se o username está disponível (rota pública)."""
+    return check_username_availability(session, username)
 
 
 @router.get("/public/{username}", response_model=BlogguideUserResponse)
