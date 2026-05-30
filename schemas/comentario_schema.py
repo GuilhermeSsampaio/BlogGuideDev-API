@@ -14,6 +14,7 @@ class ComentarioCreate(BaseModel):
 class ComentarioAuthorResponse(BaseModel):
     username: str
     profile_picture: Optional[str] = None
+    is_public: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

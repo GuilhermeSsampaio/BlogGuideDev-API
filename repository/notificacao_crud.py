@@ -3,6 +3,7 @@ from uuid import UUID
 
 from sqlmodel import Session, select
 
+from models.blogguide_user import BlogguideUser, TipoPerfil
 from models.notificacao import Notificacao
 
 
@@ -27,6 +28,31 @@ def create_notificacao(
     session.commit()
     session.refresh(notificacao)
     return notificacao
+
+
+def notify_admins(
+    session: Session,
+    tipo: str,
+    referencia_id: UUID,
+    tipo_referencia: str,
+    mensagem: str,
+    ator_id: UUID | None = None,
+) -> None:
+    admins = session.exec(
+        select(BlogguideUser).where(BlogguideUser.tipo_perfil == TipoPerfil.admin)
+    ).all()
+    for admin in admins:
+        if ator_id and admin.id == ator_id:
+            continue
+        create_notificacao(
+            session=session,
+            destinatario_id=admin.id,
+            tipo=tipo,
+            referencia_id=referencia_id,
+            tipo_referencia=tipo_referencia,
+            mensagem=mensagem,
+            ator_id=ator_id,
+        )
 
 
 def list_notificacoes_usuario(session: Session, destinatario_id: UUID, limit: int = 50) -> List[Notificacao]:

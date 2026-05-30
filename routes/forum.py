@@ -12,7 +12,8 @@ from repository.crud import (
     update_forum_topic,
     delete_forum_topic,
 )
-from services.push_service import build_push_payload, queue_push_broadcast
+from repository.notificacao_crud import notify_admins
+from services.push_service import build_push_payload, queue_push_to_admins
 from schemas.forum_schema import (
     ForumCreate,
     ForumUpdate,
@@ -68,13 +69,23 @@ def create_topic(
     """Cria um novo tópico no fórum (qualquer usuário autenticado)."""
     profile = get_profile_or_404(session, UUID(user_id))
     topic = create_forum_topic(session, profile.id, topic_data)
+    
+    notify_admins(
+        session=session,
+        tipo="novo_forum",
+        referencia_id=topic.id,
+        tipo_referencia="forum",
+        mensagem=f"Novo tópico criado por {profile.user.username}: {topic.titulo}",
+        ator_id=profile.id,
+    )
+
     payload = build_push_payload(
         title="Novo tópico no fórum",
         body=f"{profile.user.username}: {topic.titulo}",
         url=f"/forum/{topic.id}",
         tag=f"forum-{topic.id}",
     )
-    queue_push_broadcast(payload, exclude_user_id=profile.id)
+    queue_push_to_admins(payload, exclude_user_id=profile.id)
     return _to_forum_response(topic)
 
 

@@ -15,6 +15,8 @@ from repository.push_subscription_crud import (
     list_push_subscriptions_for_user,
     remove_push_subscription,
 )
+from models.blogguide_user import BlogguideUser, TipoPerfil
+from sqlmodel import select
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,24 @@ def send_push_broadcast(
     return _send_payload_to_subscriptions(session, subscriptions, payload)
 
 
+def send_push_to_admins(
+    session: Session,
+    payload: str,
+    exclude_user_id: UUID | None = None,
+) -> int:
+    admins = session.exec(
+        select(BlogguideUser).where(BlogguideUser.tipo_perfil == TipoPerfil.admin)
+    ).all()
+    admin_ids = [admin.id for admin in admins]
+    if exclude_user_id and exclude_user_id in admin_ids:
+        admin_ids.remove(exclude_user_id)
+
+    total_sent = 0
+    for admin_id in admin_ids:
+        total_sent += send_push_to_user(session, admin_id, payload)
+    return total_sent
+
+
 def queue_push_to_user(destinatario_id: UUID, payload: str) -> None:
     if not is_push_configured():
         return
@@ -132,5 +152,16 @@ def queue_push_broadcast(payload: str, exclude_user_id: UUID | None = None) -> N
     def _task() -> None:
         with Session(engine) as session:
             send_push_broadcast(session, payload, exclude_user_id)
+
+    threading.Thread(target=_task, daemon=True).start()
+
+
+def queue_push_to_admins(payload: str, exclude_user_id: UUID | None = None) -> None:
+    if not is_push_configured():
+        return
+
+    def _task() -> None:
+        with Session(engine) as session:
+            send_push_to_admins(session, payload, exclude_user_id)
 
     threading.Thread(target=_task, daemon=True).start()

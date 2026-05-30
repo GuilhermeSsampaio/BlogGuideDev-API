@@ -38,6 +38,7 @@ def _to_comentario_response(c, respostas: list[ComentarioResponse] | None = None
         autor=ComentarioAuthorResponse(
             username=user.username if user else "Anônimo",
             profile_picture=autor.profile_picture if autor else None,
+            is_public=bool(autor.is_public) if autor else False,
         ),
         respostas=respostas or [],
     )

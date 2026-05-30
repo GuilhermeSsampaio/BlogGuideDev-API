@@ -16,6 +16,8 @@ from repository.crud import (
     update_vaga as update_vaga_db,
     delete_vaga,
 )
+from repository.notificacao_crud import notify_admins
+from services.push_service import build_push_payload, queue_push_to_admins
 
 router = APIRouter()
 
@@ -82,6 +84,24 @@ def criar_vaga(
     """Cria uma nova vaga (apenas recrutador)."""
     profile = get_profile_or_404(session, UUID(user_id))
     vaga = create_vaga(session, profile.id, vaga_data)
+    
+    notify_admins(
+        session=session,
+        tipo="nova_vaga",
+        referencia_id=vaga.id,
+        tipo_referencia="vaga",
+        mensagem=f"Nova vaga criada por {profile.user.username}: {vaga.titulo}",
+        ator_id=profile.id,
+    )
+    
+    payload = build_push_payload(
+        title="Nova vaga publicada",
+        body=f"{profile.user.username}: {vaga.titulo}",
+        url=f"/vagas/{vaga.id}",
+        tag=f"vaga-{vaga.id}",
+    )
+    queue_push_to_admins(payload, exclude_user_id=profile.id)
+
     return _to_response(vaga)
 
 
