@@ -2,10 +2,9 @@ from uuid import UUID
 import threading
 import logging
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from auth.security.dependencies import current_user, require_role
-from auth.security.tokens import decode_token
 from config.db import SessionDep
 from models.blogguide_user import TipoPerfil
 from models.sugestao import Sugestao
@@ -23,28 +22,19 @@ router = APIRouter()
 def criar_sugestao(
     data: SugestaoCreate,
     session: SessionDep,
-    authorization: str | None = Header(default=None),
+    user_id: str = Depends(current_user),
 ):
     if data.tipo not in ("sugestao", "bug"):
         raise HTTPException(status_code=400, detail="tipo deve ser 'sugestao' ou 'bug'")
 
-    # JWT sub contém User.id (tabela auth), mas Sugestao.user_id faz FK
-    # para blogguideuser.id. Precisamos resolver o perfil BlogguideUser.
-    profile_id: UUID | None = None
-    user_name: str | None = None
-    if authorization and authorization.lower().startswith("bearer "):
-        try:
-            token = authorization.split(" ", 1)[1]
-            payload = decode_token(token)
-            if payload and payload.get("sub"):
-                auth_user_id = UUID(payload["sub"])
-                profile = get_blogguide_user_by_user_id(session, auth_user_id)
-                if profile:
-                    profile_id = profile.id
-                    user_name = getattr(profile, "nome", None) or getattr(profile, "name", None)
-        except Exception:
-            # Token inválido/expirado – segue como anônimo
-            pass
+    # Resolve o perfil BlogguideUser a partir do User.id (auth)
+    auth_user_id = UUID(user_id)
+    profile = get_blogguide_user_by_user_id(session, auth_user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Perfil de usuário não encontrado")
+
+    profile_id = profile.id
+    user_name = getattr(profile, "nome", None) or getattr(profile, "name", None)
 
     sugestao = Sugestao(
         user_id=profile_id,
