@@ -162,6 +162,50 @@ def authenticate_blogguide_user(session: Session, email: str, password: str) -> 
     return tokens
 
 
+def change_user_password(
+    session: Session, user_uuid: UUID, current_password: str, new_password: str
+) -> dict:
+    """Altera a senha do usuário autenticado."""
+    from auth.security.hashing import verify_password as _verify_password
+
+    profile = get_profile_or_404(session, user_uuid)
+
+    # Busca o provider de senha
+    provider = session.exec(
+        select(AuthProvider).where(
+            AuthProvider.user_id == profile.user_id,
+            AuthProvider.provider == "password",
+        )
+    ).first()
+
+    if not provider or not provider.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sua conta não possui senha local (login via OAuth).",
+        )
+
+    # Verifica senha atual
+    if not _verify_password(current_password, provider.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha atual incorreta.",
+        )
+
+    # Validação de tamanho mínimo
+    if len(new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A nova senha deve ter no mínimo 6 caracteres.",
+        )
+
+    # Atualiza o hash
+    provider.password_hash = hash_password(new_password)
+    session.add(provider)
+    session.commit()
+
+    return {"message": "Senha alterada com sucesso!"}
+
+
 def list_all_blogguide_users(session: Session) -> list[BlogguideUserUpdate]:
     """Lista todos os perfis blogguide."""
     profiles = list_blogguide_users(session)

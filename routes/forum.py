@@ -32,6 +32,7 @@ def _to_forum_response(topic) -> ForumResponse:
         descricao=topic.descricao,
         tipo=topic.tipo,
         imagem_url=topic.imagem_url,
+        tags=topic.tags,
         data_criacao=topic.data_criacao,
         data_atualizacao=topic.data_atualizacao,
         autor=ForumAuthorResponse(
