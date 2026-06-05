@@ -1,0 +1,1 @@
+ALTER TABLE forum ADD COLUMN tags JSON DEFAULT '[]';

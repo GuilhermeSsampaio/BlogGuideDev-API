@@ -32,6 +32,7 @@ def create_forum_topic(session: Session, autor_id: UUID, topic_data) -> Forum:
         descricao=topic_data.descricao,
         tipo=topic_data.tipo,
         imagem_url=topic_data.imagem_url,
+        tags=topic_data.tags,
         autor_id=autor_id,
     )
     session.add(topic)

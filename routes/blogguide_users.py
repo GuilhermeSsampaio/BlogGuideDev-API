@@ -2,7 +2,7 @@ from typing import List
 from fastapi import Depends, APIRouter, UploadFile, File, Form, Header, HTTPException
 from uuid import UUID
 
-from auth.schemas.auth_schema import UserLogin, UserRegister
+from auth.schemas.auth_schema import UserLogin, UserRegister, ChangePassword
 from auth.schemas.token_schema import TokenResponse
 from auth.security.dependencies import current_user, require_role
 from models.blogguide_user import TipoPerfil
@@ -23,6 +23,7 @@ from schemas.post_schema import (
 
 from services.user_service import (
     authenticate_blogguide_user,
+    change_user_password,
     check_username_availability,
     edit_profile,
     edit_profile_with_avatar,
@@ -76,6 +77,18 @@ def blogguide_login(login_data: UserLogin, session: SessionDep):
 
 
 # ── Perfil ──────────────────────────────────────────────────
+
+
+@router.put("/change-password")
+def change_password(
+    payload: ChangePassword,
+    session: SessionDep,
+    user_id: str = Depends(current_user),
+):
+    """Altera a senha do usuário autenticado."""
+    return change_user_password(
+        session, UUID(user_id), payload.current_password, payload.new_password
+    )
 
 
 @router.get("/list_blogguide_users", response_model=List[BlogguideUserResponse])
